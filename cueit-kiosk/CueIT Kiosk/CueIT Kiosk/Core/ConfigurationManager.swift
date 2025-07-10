@@ -174,7 +174,7 @@ class ConfigurationManager: ObservableObject {
         // TODO: Implement periodic configuration updates from server
         // This would periodically check if the kiosk has been deactivated
         configUpdateTimer = Timer.scheduledTimer(withTimeInterval: 300, repeats: true) { _ in
-            Task {
+            Task { @MainActor in
                 await self.checkServerStatus()
             }
         }

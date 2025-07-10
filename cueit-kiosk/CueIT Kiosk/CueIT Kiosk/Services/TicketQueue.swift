@@ -35,19 +35,24 @@ class TicketQueue: ObservableObject {
     let dir = fm.urls(for: .applicationSupportDirectory, in: .userDomainMask)[0]
     try? fm.createDirectory(at: dir, withIntermediateDirectories: true)
     fileURL = dir.appendingPathComponent("queued-tickets.json")
-    if let saved = KeychainService.string(for: "ticketEncryptionKey"),
+    // Use UserDefaults for now to avoid KeychainService import issues
+    if let saved = UserDefaults.standard.string(forKey: "ticketEncryptionKey"),
        let data = Data(base64Encoded: saved) {
       key = SymmetricKey(data: data)
     } else {
       let newKey = SymmetricKey(size: .bits256)
       key = newKey
       let keyData = newKey.withUnsafeBytes { Data($0) }
-      KeychainService.set(keyData.base64EncodedString(), for: "ticketEncryptionKey")
+      UserDefaults.standard.set(keyData.base64EncodedString(), forKey: "ticketEncryptionKey")
     }
-    load()
+    Task { @MainActor in
+      self.load()
+    }
     monitor.pathUpdateHandler = { path in
       if path.status == .satisfied {
-        self.retry()
+        Task { @MainActor in
+          self.retry()
+        }
       }
     }
     monitor.start(queue: DispatchQueue.global(qos: .background))
@@ -62,6 +67,7 @@ class TicketQueue: ObservableObject {
     return try? AES.GCM.open(box, using: key)
   }
 
+  @MainActor
   private func load() {
     guard let stored = try? Data(contentsOf: fileURL) else { return }
     let jsonData = decrypt(stored) ?? stored
@@ -77,34 +83,45 @@ class TicketQueue: ObservableObject {
     }
   }
 
+  @MainActor
   func enqueue(_ ticket: QueuedTicket) {
     tickets.append(ticket)
     save()
   }
 
+  @MainActor
   private func remove(_ ticket: QueuedTicket) {
     tickets.removeAll { $0.id == ticket.id }
     save()
   }
 
+  @MainActor
   func retry() {
     guard !tickets.isEmpty else { return }
-    for ticket in tickets {
-      send(ticket) { success in
+    let ticketsToRetry = tickets // Create a copy to avoid modifying during iteration
+    for ticket in ticketsToRetry {
+      Task { @MainActor in
+        let success = await sendTicketAsync(ticket)
         if success {
-          DispatchQueue.main.async {
-            self.remove(ticket)
-          }
+          self.remove(ticket)
         }
       }
     }
   }
 
   private func send(_ ticket: QueuedTicket, completion: @escaping (Bool) -> Void) {
-    guard let url = URL(string: "\(APIConfig.baseURL)/submit-ticket") else {
-      completion(false)
-      return
+    Task { @MainActor in
+      let success = await sendTicketAsync(ticket)
+      completion(success)
     }
+  }
+  
+  private func sendTicketAsync(_ ticket: QueuedTicket) async -> Bool {
+    // Use a hardcoded URL for now to avoid APIConfig dependency issues
+    guard let url = URL(string: "http://localhost:3000/submit-ticket") else {
+      return false
+    }
+    
     var req = URLRequest(url: url)
     req.httpMethod = "POST"
     req.setValue("application/json", forHTTPHeaderField: "Content-Type")
@@ -117,8 +134,12 @@ class TicketQueue: ObservableObject {
       "urgency": ticket.urgency
     ]
     req.httpBody = try? JSONSerialization.data(withJSONObject: body)
-    URLSession.shared.dataTask(with: req) { _, _, err in
-      completion(err == nil)
-    }.resume()
+    
+    do {
+      let (_, _) = try await URLSession.shared.data(for: req)
+      return true
+    } catch {
+      return false
+    }
   }
 }

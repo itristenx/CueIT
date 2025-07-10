@@ -6,6 +6,7 @@ struct StatusUpdate: Codable {
     let message: String
 }
 
+@MainActor
 class StatusService: ObservableObject {
     static let shared = StatusService()
     @Published var latest: StatusUpdate?
@@ -34,7 +35,7 @@ class StatusService: ObservableObject {
     private func connect() {
         task?.cancel()
         guard let url = URL(string: "\(APIConfig.baseURL)/api/events") else { return }
-        task = Task {
+        task = Task { @MainActor in
             do {
                 let (bytes, _) = try await URLSession.shared.bytes(from: url)
                 for try await line in bytes.lines {
@@ -42,10 +43,8 @@ class StatusService: ObservableObject {
                         let json = line.dropFirst(6)
                         if let data = json.data(using: .utf8),
                            let update = try? JSONDecoder().decode(StatusUpdate.self, from: data) {
-                            await MainActor.run {
-                                self.latest = update
-                                self.cacheCurrent()
-                            }
+                            self.latest = update
+                            self.cacheCurrent()
                         }
                     }
                 }

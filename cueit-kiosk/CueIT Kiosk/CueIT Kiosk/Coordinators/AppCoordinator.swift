@@ -91,7 +91,6 @@ class AppCoordinator: ObservableObject {
     private func setupObservers() {
         // Observe kiosk service state changes
         kioskService.$state
-            .receive(on: DispatchQueue.main)
             .sink { [weak self] state in
                 self?.handleKioskStateChange(state)
             }
@@ -108,7 +107,6 @@ class AppCoordinator: ObservableObject {
         
         // Observe activation state changes
         configService.$activationState
-            .receive(on: DispatchQueue.main)
             .sink { [weak self] state in
                 self?.handleActivationStateChange(state)
             }
@@ -116,10 +114,9 @@ class AppCoordinator: ObservableObject {
     }
     
     private func startInitialization() {
-        DispatchQueue.main.asyncAfter(deadline: .now() + 1.0) {
-            Task {
-                await self.performInitialSetup()
-            }
+        Task {
+            try? await Task.sleep(for: .seconds(1))
+            await performInitialSetup()
         }
     }
     
@@ -191,40 +188,36 @@ class AppCoordinator: ObservableObject {
     }
     
     private func handleKioskStateChange(_ state: ActivationState) {
-        DispatchQueue.main.async {
-            switch state {
-            case .needsServerConfig:
-                self.currentState = .serverConfiguration
-            case .waitingForActivation:
-                self.currentState = .activation
-            case .active:
-                self.currentState = .active
-            case .error:
-                self.currentState = .error
-            case .checking:
-                // Keep current state during checks
-                break
-            case .inactive:
-                self.currentState = .maintenance
-            }
+        switch state {
+        case .needsServerConfig:
+            self.currentState = .serverConfiguration
+        case .waitingForActivation:
+            self.currentState = .activation
+        case .active:
+            self.currentState = .active
+        case .error:
+            self.currentState = .error
+        case .checking:
+            // Keep current state during checks
+            break
+        case .inactive:
+            self.currentState = .maintenance
         }
     }
     
     private func handleActivationStateChange(_ state: EnhancedConfigService.ActivationState) {
-        DispatchQueue.main.async {
-            switch state {
-            case .notActivated, .expired, .revoked:
-                if self.currentState != .serverConfiguration {
-                    self.currentState = .activation
-                }
-            case .activated:
-                self.currentState = .active
-            case .activating:
-                // Keep current state during activation
-                break
-            case .error:
-                self.currentState = .error
+        switch state {
+        case .notActivated, .expired, .revoked:
+            if self.currentState != .serverConfiguration {
+                self.currentState = .activation
             }
+        case .activated:
+            self.currentState = .active
+        case .activating:
+            // Keep current state during activation
+            break
+        case .error:
+            self.currentState = .error
         }
     }
     

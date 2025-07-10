@@ -428,7 +428,7 @@ struct WallMountKioskView: View {
         
         // Set up periodic checks every 5 minutes
         Timer.scheduledTimer(withTimeInterval: 300, repeats: true) { _ in
-            Task {
+            Task { @MainActor in
                 await configService.checkActivationStatus()
                 if await configService.isOnline() {
                     await configService.loadRemoteConfig()

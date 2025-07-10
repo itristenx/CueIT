@@ -284,7 +284,9 @@ class KioskService: ObservableObject {
     private func scheduleNextPoll() {
         timer?.invalidate()
         timer = Timer.scheduledTimer(withTimeInterval: pollInterval, repeats: false) { _ in
-            Task { await self.pollAndScheduleNext() }
+            Task { @MainActor in
+                await self.pollAndScheduleNext()
+            }
         }
     }
 

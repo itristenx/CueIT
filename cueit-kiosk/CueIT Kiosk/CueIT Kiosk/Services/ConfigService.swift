@@ -9,11 +9,11 @@ struct AppConfig: Codable {
     var scimToken: String?
 }
 
+@MainActor
 class ConfigService: ObservableObject {
     @Published var config: AppConfig = AppConfig(logoUrl: "/logo.png", backgroundUrl: nil, welcomeMessage: "Welcome", helpMessage: "Need help?")
     @Published var errorMessage: String?
 
-    @MainActor
     func load() async {
         // Load cached config first
         if let data = UserDefaults.standard.data(forKey: "config") {
@@ -79,23 +79,25 @@ class ConfigService: ObservableObject {
             completion(false, nil)
             return
         }
-        var req = URLRequest(url: url)
-        req.httpMethod = "POST"
-        req.setValue("application/json", forHTTPHeaderField: "Content-Type")
-        let body = ["password": password]
-        req.httpBody = try? JSONEncoder().encode(body)
-        URLSession.shared.dataTask(with: req) { data, _, error in
-            if let error = error {
-                DispatchQueue.main.async { completion(false, error) }
-                return
+        
+        Task { @MainActor in
+            do {
+                var req = URLRequest(url: url)
+                req.httpMethod = "POST"
+                req.setValue("application/json", forHTTPHeaderField: "Content-Type")
+                let body = ["password": password]
+                req.httpBody = try? JSONEncoder().encode(body)
+                
+                let (data, _) = try await URLSession.shared.data(for: req)
+                if let resp = try? JSONDecoder().decode(VerifyResponse.self, from: data) {
+                    completion(resp.valid, nil)
+                } else {
+                    completion(false, URLError(.badServerResponse))
+                }
+            } catch {
+                completion(false, error)
             }
-            guard let data = data,
-                  let resp = try? JSONDecoder().decode(VerifyResponse.self, from: data) else {
-                DispatchQueue.main.async { completion(false, URLError(.badServerResponse)) }
-                return
-            }
-            DispatchQueue.main.async { completion(resp.valid, nil) }
-        }.resume()
+        }
     }
     
     func verifyPin(_ pin: String, completion: @escaping (Bool, Error?) -> Void) {
@@ -104,54 +106,48 @@ class ConfigService: ObservableObject {
             return
         }
         
-        var req = URLRequest(url: url)
-        req.httpMethod = "POST"
-        req.setValue("application/json", forHTTPHeaderField: "Content-Type")
-        req.timeoutInterval = 10.0 // 10 second timeout
-        
-        let body = ["pin": pin]
-        do {
-            req.httpBody = try JSONEncoder().encode(body)
-        } catch {
-            completion(false, error)
-            return
-        }
-        
-        URLSession.shared.dataTask(with: req) { data, response, error in
-            if let error = error {
-                DispatchQueue.main.async { completion(false, error) }
-                return
-            }
-            
-            guard let httpResponse = response as? HTTPURLResponse else {
-                DispatchQueue.main.async { completion(false, URLError(.badServerResponse)) }
-                return
-            }
-            
-            // Check for HTTP error status codes
-            guard httpResponse.statusCode == 200 else {
-                let error: Error
-                switch httpResponse.statusCode {
-                case 401, 403:
-                    error = URLError(.userAuthenticationRequired)
-                case 404:
-                    error = URLError(.fileDoesNotExist)
-                case 500...599:
-                    error = URLError(.badServerResponse)
-                default:
-                    error = URLError(.unknown)
+        Task { @MainActor in
+            do {
+                var req = URLRequest(url: url)
+                req.httpMethod = "POST"
+                req.setValue("application/json", forHTTPHeaderField: "Content-Type")
+                req.timeoutInterval = 10.0 // 10 second timeout
+                
+                let body = ["pin": pin]
+                req.httpBody = try JSONEncoder().encode(body)
+                
+                let (data, response) = try await URLSession.shared.data(for: req)
+                
+                guard let httpResponse = response as? HTTPURLResponse else {
+                    completion(false, URLError(.badServerResponse))
+                    return
                 }
-                DispatchQueue.main.async { completion(false, error) }
-                return
+                
+                // Check for HTTP error status codes
+                guard httpResponse.statusCode == 200 else {
+                    let error: Error
+                    switch httpResponse.statusCode {
+                    case 401, 403:
+                        error = URLError(.userAuthenticationRequired)
+                    case 404:
+                        error = URLError(.fileDoesNotExist)
+                    case 500...599:
+                        error = URLError(.badServerResponse)
+                    default:
+                        error = URLError(.unknown)
+                    }
+                    completion(false, error)
+                    return
+                }
+                
+                if let resp = try? JSONDecoder().decode(VerifyResponse.self, from: data) {
+                    completion(resp.valid, nil)
+                } else {
+                    completion(false, URLError(.cannotParseResponse))
+                }
+            } catch {
+                completion(false, error)
             }
-            
-            guard let data = data,
-                  let resp = try? JSONDecoder().decode(VerifyResponse.self, from: data) else {
-                DispatchQueue.main.async { completion(false, URLError(.cannotParseResponse)) }
-                return
-            }
-            
-            DispatchQueue.main.async { completion(resp.valid, nil) }
-        }.resume()
+        }
     }
 }

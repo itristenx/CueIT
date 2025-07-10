@@ -8,6 +8,7 @@ struct DirectoryUser: Identifiable {
     let manager: String?
 }
 
+@MainActor
 class DirectoryService: ObservableObject {
     static let shared = DirectoryService()
     @Published var suggestions: [DirectoryUser] = []
@@ -33,40 +34,42 @@ class DirectoryService: ObservableObject {
 
     func search(email: String) {
         guard email.count >= 3 else {
-            DispatchQueue.main.async { 
-                self.suggestions = []
-                self.isSearching = false
-            }
+            self.suggestions = []
+            self.isSearching = false
             return
         }
         
-        DispatchQueue.main.async { self.isSearching = true }
+        self.isSearching = true
         
         let filter = "userName co \"\(email)\""
         guard let encoded = filter.addingPercentEncoding(withAllowedCharacters: .urlQueryAllowed),
               let url = URL(string: "\(baseURL)/Users?filter=\(encoded)") else { 
-            DispatchQueue.main.async { self.isSearching = false }
+            self.isSearching = false
             return 
         }
         var req = URLRequest(url: url)
         if !token.isEmpty {
             req.setValue("Bearer \(token)", forHTTPHeaderField: "Authorization")
         }
-        URLSession.shared.dataTask(with: req) { data, _, _ in
-            var results: [DirectoryUser] = []
-            if let data = data,
-               let obj = try? JSONSerialization.jsonObject(with: data) as? [String: Any],
-               let res = obj["Resources"] as? [[String: Any]] {
-                results = res.compactMap { DirectoryService.parseUser($0) }
-            }
-            DispatchQueue.main.async {
+        
+        Task { @MainActor in
+            do {
+                let (data, _) = try await URLSession.shared.data(for: req)
+                var results: [DirectoryUser] = []
+                if let obj = try? JSONSerialization.jsonObject(with: data) as? [String: Any],
+                   let res = obj["Resources"] as? [[String: Any]] {
+                    results = res.compactMap { DirectoryService.parseUser($0) }
+                }
                 self.suggestions = results
                 self.isSearching = false
+            } catch {
+                self.suggestions = []
+                self.isSearching = false
             }
-        }.resume()
+        }
     }
 
-    private static func parseUser(_ dict: [String: Any]) -> DirectoryUser? {
+    private nonisolated static func parseUser(_ dict: [String: Any]) -> DirectoryUser? {
         guard let id = dict["id"] as? String else { return nil }
         let userName = dict["userName"] as? String ?? ""
         let displayName = dict["displayName"] as? String ?? userName

@@ -9,6 +9,7 @@ struct CueNotification: Codable {
     let created_at: String
 }
 
+@MainActor
 class NotificationService: ObservableObject {
     static let shared = NotificationService()
     @Published var latest: CueNotification?
@@ -20,7 +21,7 @@ class NotificationService: ObservableObject {
     private func connect() {
         task?.cancel()
         guard let url = URL(string: "\(APIConfig.baseURL)/api/notifications/stream") else { return }
-        task = Task {
+        task = Task { @MainActor in
             do {
                 let (bytes, _) = try await URLSession.shared.bytes(from: url)
                 for try await line in bytes.lines {
@@ -28,9 +29,7 @@ class NotificationService: ObservableObject {
                         let json = line.dropFirst(6)
                         if let data = json.data(using: .utf8),
                            let arr = try? JSONDecoder().decode([CueNotification].self, from: data) {
-                            await MainActor.run {
-                                self.latest = arr.first
-                            }
+                            self.latest = arr.first
                         }
                     }
                 }

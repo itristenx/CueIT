@@ -49,6 +49,7 @@ enum ConnectionState: String, CaseIterable {
 }
 
 // MARK: - Connection Status Model
+@MainActor
 class ConnectionStatus: ObservableObject {
     @Published var state: ConnectionState = .disconnected
     @Published var lastConnected: Date?
@@ -69,57 +70,50 @@ class ConnectionStatus: ObservableObject {
     }
     
     deinit {
-        stopTimers()
+        reconnectTimer?.invalidate()
+        healthCheckTimer?.invalidate()
     }
     
     // MARK: - Public Methods
     func updateStatus(_ newState: ConnectionState, errorMessage: String? = nil) {
-        DispatchQueue.main.async {
-            self.state = newState
-            self.errorMessage = errorMessage
-            
-            if newState == .connected {
-                self.lastConnected = Date()
-                self.retryCount = 0
-                self.isRetrying = false
-                self.stopReconnectTimer()
-            } else if newState == .disconnected || newState == .error {
-                if !self.isRetrying {
-                    self.startReconnectTimer()
-                }
+        self.state = newState
+        self.errorMessage = errorMessage
+        
+        if newState == .connected {
+            self.lastConnected = Date()
+            self.retryCount = 0
+            self.isRetrying = false
+            self.stopReconnectTimer()
+        } else if newState == .disconnected || newState == .error {
+            if !self.isRetrying {
+                self.startReconnectTimer()
             }
         }
     }
     
     func setServerInfo(url: String, kioskId: String) {
-        DispatchQueue.main.async {
-            self.serverUrl = url
-            self.kioskId = kioskId
-        }
+        self.serverUrl = url
+        self.kioskId = kioskId
     }
     
     func manualRetry() {
         guard !isRetrying else { return }
         
-        DispatchQueue.main.async {
-            self.retryCount = 0
-            self.isRetrying = true
-            self.state = .connecting
-            self.errorMessage = nil
-        }
+        self.retryCount = 0
+        self.isRetrying = true
+        self.state = .connecting
+        self.errorMessage = nil
         
         // Notify observers to attempt reconnection
         NotificationCenter.default.post(name: .connectionRetryRequested, object: nil)
     }
     
     func reset() {
-        DispatchQueue.main.async {
-            self.state = .disconnected
-            self.lastConnected = nil
-            self.retryCount = 0
-            self.isRetrying = false
-            self.errorMessage = nil
-        }
+        self.state = .disconnected
+        self.lastConnected = nil
+        self.retryCount = 0
+        self.isRetrying = false
+        self.errorMessage = nil
         stopTimers()
     }
     
@@ -128,27 +122,21 @@ class ConnectionStatus: ObservableObject {
         stopReconnectTimer()
         
         guard retryCount < maxRetryCount else {
-            DispatchQueue.main.async {
-                self.isRetrying = false
-                self.state = .error
-                self.errorMessage = "Connection failed after \(self.maxRetryCount) attempts"
-            }
+            self.isRetrying = false
+            self.state = .error
+            self.errorMessage = "Connection failed after \(self.maxRetryCount) attempts"
             return
         }
         
-        DispatchQueue.main.async {
-            self.isRetrying = true
-            self.retryCount += 1
-        }
+        self.isRetrying = true
+        self.retryCount += 1
         
         reconnectTimer = Timer.scheduledTimer(withTimeInterval: retryInterval, repeats: false) { [weak self] _ in
-            guard let self = self else { return }
-            
-            DispatchQueue.main.async {
+            Task { @MainActor in
+                guard let self = self else { return }
                 self.state = .connecting
+                NotificationCenter.default.post(name: .connectionRetryRequested, object: nil)
             }
-            
-            NotificationCenter.default.post(name: .connectionRetryRequested, object: nil)
         }
     }
     
@@ -159,10 +147,12 @@ class ConnectionStatus: ObservableObject {
     
     private func startHealthCheck() {
         healthCheckTimer = Timer.scheduledTimer(withTimeInterval: healthCheckInterval, repeats: true) { [weak self] _ in
-            guard let self = self, self.state == .connected else { return }
-            
-            // Post health check notification
-            NotificationCenter.default.post(name: .connectionHealthCheck, object: nil)
+            Task { @MainActor in
+                guard let self = self, self.state == .connected else { return }
+                
+                // Post health check notification
+                NotificationCenter.default.post(name: .connectionHealthCheck, object: nil)
+            }
         }
     }
     

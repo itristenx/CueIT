@@ -94,6 +94,7 @@ struct AdminPinValidation: Codable {
     var pinType: String?
 }
 
+@MainActor
 class EnhancedConfigService: ObservableObject {
     static let shared = EnhancedConfigService()
     
@@ -578,7 +579,7 @@ class EnhancedConfigService: ObservableObject {
     
     private func startPeriodicSync() {
         syncTimer = Timer.scheduledTimer(withTimeInterval: 30.0, repeats: true) { _ in
-            Task {
+            Task { @MainActor in
                 await self.loadRemoteConfig()
             }
         }

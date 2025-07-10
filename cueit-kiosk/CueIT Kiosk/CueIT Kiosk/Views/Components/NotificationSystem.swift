@@ -24,26 +24,26 @@ enum NotificationType: String, CaseIterable {
     var color: Color {
         switch self {
         case .info:
-            return Theme.Colors.accent
+            return .blue
         case .success:
-            return Theme.Colors.success
+            return .green
         case .warning:
-            return Theme.Colors.warning
+            return .orange
         case .error:
-            return Theme.Colors.destructive
+            return .red
         }
     }
     
     var backgroundColor: Color {
         switch self {
         case .info:
-            return Theme.Colors.accent.opacity(0.1)
+            return .blue.opacity(0.1)
         case .success:
-            return Theme.Colors.success.opacity(0.1)
+            return .green.opacity(0.1)
         case .warning:
-            return Theme.Colors.warning.opacity(0.1)
+            return .orange.opacity(0.1)
         case .error:
-            return Theme.Colors.destructive.opacity(0.1)
+            return .red.opacity(0.1)
         }
     }
 }
@@ -90,6 +90,7 @@ struct NotificationAction {
 }
 
 // MARK: - Notification Manager
+@MainActor
 class NotificationManager: ObservableObject {
     @Published var notifications: [AppNotification] = []
     @Published var isVisible = false
@@ -100,19 +101,17 @@ class NotificationManager: ObservableObject {
     static let shared = NotificationManager()
     
     private init() {
-        setupConnectionStatusObserver()
+        // Initialize notification manager
     }
     
     // MARK: - Public Methods
     func show(_ notification: AppNotification) {
-        DispatchQueue.main.async {
-            self.notifications.append(notification)
-            self.isVisible = true
-            
-            // Auto-dismiss if duration is set
-            if let duration = notification.duration {
-                self.scheduleAutoDismiss(for: notification, after: duration)
-            }
+        notifications.append(notification)
+        isVisible = true
+        
+        // Auto-dismiss if duration is set
+        if let duration = notification.duration {
+            scheduleAutoDismiss(for: notification, after: duration)
         }
     }
     
@@ -134,24 +133,20 @@ class NotificationManager: ObservableObject {
     }
     
     func dismiss(_ notification: AppNotification) {
-        DispatchQueue.main.async {
-            self.notifications.removeAll { $0.id == notification.id }
-            self.timers[notification.id]?.invalidate()
-            self.timers.removeValue(forKey: notification.id)
-            
-            if self.notifications.isEmpty {
-                self.isVisible = false
-            }
+        notifications.removeAll { $0.id == notification.id }
+        timers[notification.id]?.invalidate()
+        timers.removeValue(forKey: notification.id)
+        
+        if notifications.isEmpty {
+            isVisible = false
         }
     }
     
     func dismissAll() {
-        DispatchQueue.main.async {
-            self.notifications.removeAll()
-            self.timers.values.forEach { $0.invalidate() }
-            self.timers.removeAll()
-            self.isVisible = false
-        }
+        notifications.removeAll()
+        timers.values.forEach { $0.invalidate() }
+        timers.removeAll()
+        isVisible = false
     }
     
     // MARK: - Convenience Methods
@@ -171,28 +166,21 @@ class NotificationManager: ObservableObject {
         show(type: .info, title: title, message: message)
     }
     
-    func showConnectionStatus(_ status: ConnectionState, message: String? = nil) {
+    func showConnectionStatus(_ isConnected: Bool, message: String? = nil) {
         let type: NotificationType
         let title: String
         
-        switch status {
-        case .connected:
+        if isConnected {
             type = .success
             title = "Connected to Server"
-        case .connecting:
-            type = .info
-            title = "Connecting to Server"
-        case .disconnected:
-            type = .warning
-            title = "Disconnected from Server"
-        case .error:
+        } else {
             type = .error
             title = "Connection Error"
         }
         
-        let retryAction = status == .error || status == .disconnected ? 
+        let retryAction = !isConnected ? 
             NotificationAction(title: "Retry") {
-                NotificationCenter.default.post(name: .connectionRetryRequested, object: nil)
+                NotificationCenter.default.post(name: Notification.Name("connectionRetryRequested"), object: nil)
             } : nil
         
         show(type: type, title: title, message: message, action: retryAction)
@@ -201,18 +189,11 @@ class NotificationManager: ObservableObject {
     // MARK: - Private Methods
     private func scheduleAutoDismiss(for notification: AppNotification, after duration: TimeInterval) {
         let timer = Timer.scheduledTimer(withTimeInterval: duration, repeats: false) { [weak self] _ in
-            self?.dismiss(notification)
+            Task { @MainActor in
+                self?.dismiss(notification)
+            }
         }
         timers[notification.id] = timer
-    }
-    
-    private func setupConnectionStatusObserver() {
-        NotificationCenter.default.publisher(for: .connectionStatusChanged)
-            .compactMap { $0.object as? ConnectionState }
-            .sink { [weak self] status in
-                self?.showConnectionStatus(status)
-            }
-            .store(in: &cancellables)
     }
 }
 
@@ -225,22 +206,22 @@ struct NotificationView: View {
     @State private var dragOffset: CGSize = .zero
     
     var body: some View {
-        HStack(spacing: Theme.Spacing.sm) {
+        HStack(spacing: 12) {
             // Icon
             Image(systemName: notification.type.iconName)
                 .font(.system(size: 20, weight: .medium))
                 .foregroundColor(notification.type.color)
             
             // Content
-            VStack(alignment: .leading, spacing: Theme.Spacing.xs) {
+            VStack(alignment: .leading, spacing: 4) {
                 Text(notification.title)
-                    .font(Theme.Typography.headline)
-                    .foregroundColor(Theme.Colors.text)
+                    .font(.headline)
+                    .foregroundColor(.primary)
                 
                 if let message = notification.message {
                     Text(message)
-                        .font(Theme.Typography.body)
-                        .foregroundColor(Theme.Colors.textSecondary)
+                        .font(.body)
+                        .foregroundColor(.secondary)
                         .fixedSize(horizontal: false, vertical: true)
                 }
             }
@@ -253,7 +234,14 @@ struct NotificationView: View {
                     action.action()
                     onDismiss()
                 }
-                .buttonStyle(TertiaryButtonStyle())
+                .font(.body)
+                .foregroundColor(.blue)
+                .padding(.horizontal, 12)
+                .padding(.vertical, 8)
+                .background(
+                    RoundedRectangle(cornerRadius: 6)
+                        .fill(Color.clear)
+                )
                 .controlSize(.small)
             }
             
@@ -265,15 +253,15 @@ struct NotificationView: View {
             } label: {
                 Image(systemName: "xmark")
                     .font(.system(size: 14, weight: .medium))
-                    .foregroundColor(Theme.Colors.textTertiary)
+                    .foregroundColor(.secondary)
             }
         }
-        .padding(Theme.Spacing.md)
+        .padding(16)
         .background(
-            RoundedRectangle(cornerRadius: Theme.CornerRadius.md)
+            RoundedRectangle(cornerRadius: 8)
                 .fill(notification.type.backgroundColor)
                 .overlay(
-                    RoundedRectangle(cornerRadius: Theme.CornerRadius.md)
+                    RoundedRectangle(cornerRadius: 8)
                         .stroke(notification.type.color.opacity(0.2), lineWidth: 1)
                 )
         )
@@ -311,7 +299,7 @@ struct NotificationContainer: View {
     @ObservedObject var notificationManager = NotificationManager.shared
     
     var body: some View {
-        VStack(spacing: Theme.Spacing.sm) {
+        VStack(spacing: 12) {
             ForEach(notificationManager.notifications) { notification in
                 NotificationView(notification: notification) {
                     notificationManager.dismiss(notification)
@@ -322,7 +310,7 @@ struct NotificationContainer: View {
                 ))
             }
         }
-        .padding(.horizontal, Theme.Spacing.md)
+        .padding(.horizontal, 16)
         .animation(.spring(response: 0.4, dampingFraction: 0.8), value: notificationManager.notifications)
     }
 }
@@ -368,7 +356,7 @@ struct NotificationContainer: View {
                 NotificationManager.shared.dismissAll()
             }
         }
-        .buttonStyle(PrimaryButtonStyle())
+        .buttonStyle(.borderedProminent)
     }
     .padding()
 }

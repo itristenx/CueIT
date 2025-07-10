@@ -230,6 +230,7 @@ enum AdminPermission: String, CaseIterable {
     }
 }
 
+@MainActor
 class AdminSession: ObservableObject {
     let id = UUID()
     let startTime = Date()
