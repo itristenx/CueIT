@@ -23,7 +23,6 @@ class ConfigurationManager: ObservableObject {
     
     // MARK: - Private Properties
     private let userDefaults = UserDefaults.standard
-    private let keychain = KeychainManager()
     private var configUpdateTimer: Timer?
     
     // Keys for UserDefaults
@@ -103,7 +102,7 @@ class ConfigurationManager: ObservableObject {
     }
     
     func updateAdminPIN(_ pin: String) async {
-        _ = keychain.store(key: "adminPIN", value: pin)
+        KeychainService.set(pin, for: "adminPIN")
     }
     
     func updateRoomName(_ name: String) async {
@@ -143,7 +142,7 @@ class ConfigurationManager: ObservableObject {
             userDefaults.removeObject(forKey: "kioskRoomName")
             
             // Clear keychain
-            _ = keychain.delete(key: "adminPIN")
+            KeychainService.delete("adminPIN")
             
             // Generate new kiosk ID for fresh start
             let newId = UUID().uuidString
@@ -211,50 +210,5 @@ class ConfigurationManager: ObservableObject {
            let data = try? JSONEncoder().encode(config) {
             userDefaults.set(data, forKey: UserDefaultsKeys.serverConfig)
         }
-    }
-}
-
-// MARK: - Configuration Models
-// MARK: - Keychain Manager
-class KeychainManager {
-    func store(key: String, value: String) -> Bool {
-        let data = value.data(using: .utf8)!
-        let query = [
-            kSecClass as String: kSecClassGenericPassword,
-            kSecAttrAccount as String: key,
-            kSecValueData as String: data
-        ] as [String: Any]
-        
-        SecItemDelete(query as CFDictionary)
-        return SecItemAdd(query as CFDictionary, nil) == errSecSuccess
-    }
-    
-    func retrieve(key: String) -> String? {
-        let query = [
-            kSecClass as String: kSecClassGenericPassword,
-            kSecAttrAccount as String: key,
-            kSecReturnData as String: kCFBooleanTrue!,
-            kSecMatchLimit as String: kSecMatchLimitOne
-        ] as [String: Any]
-        
-        var dataTypeRef: AnyObject?
-        let status = SecItemCopyMatching(query as CFDictionary, &dataTypeRef)
-        
-        if status == errSecSuccess {
-            if let data = dataTypeRef as? Data {
-                return String(data: data, encoding: .utf8)
-            }
-        }
-        
-        return nil
-    }
-    
-    func delete(key: String) -> Bool {
-        let query = [
-            kSecClass as String: kSecClassGenericPassword,
-            kSecAttrAccount as String: key
-        ] as [String: Any]
-        
-        return SecItemDelete(query as CFDictionary) == errSecSuccess
     }
 }

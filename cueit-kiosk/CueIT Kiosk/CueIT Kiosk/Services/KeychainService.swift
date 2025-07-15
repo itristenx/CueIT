@@ -1,6 +1,9 @@
 import Foundation
 import Security
 
+// MARK: - Keychain Manager (alias for compatibility)
+typealias KeychainManager = KeychainService
+
 class KeychainService {
     static func string(for key: String) -> String? {
         let query: [String: Any] = [

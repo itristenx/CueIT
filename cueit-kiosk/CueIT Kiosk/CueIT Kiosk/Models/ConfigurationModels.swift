@@ -7,6 +7,21 @@
 
 import Foundation
 
+// MARK: - Server Configuration
+struct ServerConfiguration: Codable {
+    let baseURL: String
+    let name: String
+    let isSecure: Bool
+    let lastTested: Date
+    
+    init(baseURL: String, name: String = "CueIT Server") {
+        self.baseURL = baseURL
+        self.name = name
+        self.isSecure = baseURL.hasPrefix("https")
+        self.lastTested = Date()
+    }
+}
+
 // MARK: - Kiosk Configuration
 struct KioskConfiguration: Codable {
     let displayName: String
@@ -45,20 +60,5 @@ struct KioskConfiguration: Codable {
         let position: String // "top", "bottom", "floating"
         let showConnectionStatus: Bool
         let showLastUpdate: Bool
-    }
-}
-
-// MARK: - Server Configuration
-struct ServerConfiguration: Codable {
-    let baseURL: String
-    let name: String
-    let isSecure: Bool
-    let lastTested: Date
-    
-    init(baseURL: String, name: String = "CueIT Server") {
-        self.baseURL = baseURL
-        self.name = name
-        self.isSecure = baseURL.hasPrefix("https")
-        self.lastTested = Date()
     }
 }

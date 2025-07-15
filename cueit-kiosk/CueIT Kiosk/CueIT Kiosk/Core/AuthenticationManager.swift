@@ -9,6 +9,40 @@ import SwiftUI
 import Combine
 import LocalAuthentication
 
+// MARK: - Authentication Types
+enum AuthMethod {
+    case pin
+    case biometric
+}
+
+enum BiometricType {
+    case none
+    case touchID
+    case faceID
+}
+
+enum AdminPermission {
+    case configureSettings
+    case manageUsers
+    case viewLogs
+    case systemControl
+}
+
+struct AdminSession {
+    let id = UUID()
+    let startTime = Date()
+    var lastActivity = Date()
+    let permissions: [AdminPermission] = [.configureSettings, .manageUsers, .viewLogs, .systemControl]
+    
+    mutating func extendSession() {
+        lastActivity = Date()
+    }
+    
+    var isExpired: Bool {
+        Date().timeIntervalSince(lastActivity) > 900 // 15 minutes
+    }
+}
+
 @MainActor
 class AuthenticationManager: ObservableObject {
     static let shared = AuthenticationManager()
@@ -22,7 +56,6 @@ class AuthenticationManager: ObservableObject {
     // MARK: - Private Properties
     private var sessionTimer: Timer?
     private let sessionTimeout: TimeInterval = 900 // 15 minutes
-    private let keychain = KeychainManager()
     
     private init() {
         checkBiometricAvailability()
@@ -81,11 +114,12 @@ class AuthenticationManager: ObservableObject {
     // MARK: - PIN Management
     func setAdminPIN(_ pin: String) -> Bool {
         let hashedPIN = hashPIN(pin)
-        return keychain.store(key: "admin_pin", value: hashedPIN)
+        KeychainService.set(hashedPIN, for: "admin_pin")
+        return true
     }
     
     func hasAdminPINSet() -> Bool {
-        return keychain.retrieve(key: "admin_pin") != nil
+        return KeychainService.string(for: "admin_pin") != nil
     }
     
     func changeAdminPIN(currentPIN: String, newPIN: String) async -> Bool {
@@ -110,7 +144,7 @@ class AuthenticationManager: ObservableObject {
     // MARK: - Private Methods
     private func validateCredential(_ credential: String) async -> Bool {
         // Check against stored PIN
-        if let storedHash = keychain.retrieve(key: "admin_pin") {
+        if let storedHash = KeychainService.string(for: "admin_pin") {
             let credentialHash = hashPIN(credential)
             return credentialHash == storedHash
         }
@@ -132,7 +166,8 @@ class AuthenticationManager: ObservableObject {
     
     private func startAdminSession() {
         isAdminAuthenticated = true
-        currentAdminSession = AdminSession()
+        var session = AdminSession()
+        currentAdminSession = session
         setupSessionTimer()
     }
     
@@ -166,92 +201,5 @@ class AuthenticationManager: ObservableObject {
     private func hashPIN(_ pin: String) -> String {
         // Simple hash for demo - in production, use proper password hashing
         return pin.data(using: .utf8)?.base64EncodedString() ?? ""
-    }
-}
-
-// MARK: - Supporting Types
-enum AuthMethod: String, CaseIterable {
-    case pin = "PIN"
-    case biometric = "Biometric"
-    case server = "Server"
-    
-    var displayName: String {
-        switch self {
-        case .pin: return "PIN Code"
-        case .biometric: return "Biometric"
-        case .server: return "Server Authentication"
-        }
-    }
-}
-
-enum BiometricType {
-    case none
-    case touchID
-    case faceID
-    
-    var displayName: String {
-        switch self {
-        case .none: return "Not Available"
-        case .touchID: return "Touch ID"
-        case .faceID: return "Face ID"
-        }
-    }
-    
-    var systemImage: String {
-        switch self {
-        case .none: return "person.crop.circle.badge.xmark"
-        case .touchID: return "touchid"
-        case .faceID: return "faceid"
-        }
-    }
-}
-
-enum AdminPermission: String, CaseIterable {
-    case viewSettings = "view_settings"
-    case modifySettings = "modify_settings"
-    case viewLogs = "view_logs"
-    case clearLogs = "clear_logs"
-    case rebootKiosk = "reboot_kiosk"
-    case changeServer = "change_server"
-    case viewDiagnostics = "view_diagnostics"
-    case factoryReset = "factory_reset"
-    
-    var displayName: String {
-        switch self {
-        case .viewSettings: return "View Settings"
-        case .modifySettings: return "Modify Settings"
-        case .viewLogs: return "View Logs"
-        case .clearLogs: return "Clear Logs"
-        case .rebootKiosk: return "Reboot Kiosk"
-        case .changeServer: return "Change Server"
-        case .viewDiagnostics: return "View Diagnostics"
-        case .factoryReset: return "Factory Reset"
-        }
-    }
-}
-
-@MainActor
-class AdminSession: ObservableObject {
-    let id = UUID()
-    let startTime = Date()
-    @Published var lastActivity = Date()
-    let permissions: Set<AdminPermission>
-    
-    init(permissions: Set<AdminPermission> = Set(AdminPermission.allCases)) {
-        self.permissions = permissions
-    }
-    
-    func extendSession() {
-        lastActivity = Date()
-    }
-    
-    var duration: TimeInterval {
-        Date().timeIntervalSince(startTime)
-    }
-    
-    var formattedDuration: String {
-        let minutes = Int(duration) / 60
-        let seconds = Int(duration) % 60
-        return String(format: "%02d:%02d", minutes, seconds)
     }
 }

@@ -5,8 +5,14 @@
 //  Main app coordinator with modern Apple UI design
 //
 
+import Foundation
 import SwiftUI
 import Combine
+
+// All types below must be available in your build target:
+// ConnectionStatus, KioskService, EnhancedConfigService, NotificationManager, APIConfig, NotificationAction, ConnectionError, ActivationState
+// If you get 'Cannot find in scope' errors, ensure these files are included in your Xcode target.
+// The Notification.Name.connectionRetryRequested extension is correct and will work if Notification+Extensions.swift is in your target.
 
 // MARK: - App State
 enum AppState: String, CaseIterable {
@@ -91,7 +97,7 @@ class AppCoordinator: ObservableObject {
     private func setupObservers() {
         // Observe kiosk service state changes
         kioskService.$state
-            .sink { [weak self] state in
+            .sink { [weak self] (state: ActivationState) in
                 self?.handleKioskStateChange(state)
             }
             .store(in: &cancellables)
@@ -107,7 +113,7 @@ class AppCoordinator: ObservableObject {
         
         // Observe activation state changes
         configService.$activationState
-            .sink { [weak self] state in
+            .sink { [weak self] (state: EnhancedConfigService.ActivationState) in
                 self?.handleActivationStateChange(state)
             }
             .store(in: &cancellables)

@@ -6,40 +6,13 @@
 	objectVersion = 77;
 	objects = {
 
-/* Begin PBXFileReference section */
-		E408F9AB2E15C04900335E52 /* CueIT Kiosk.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = "CueIT Kiosk.app"; sourceTree = BUILT_PRODUCTS_DIR; };
-/* End PBXFileReference section */
-
-/* Begin PBXFileSystemSynchronizedBuildFileExceptionSet section */
-		E408F9C92E15C04A00335E52 /* Exceptions for "CueIT Kiosk" folder in "CueIT Kiosk" target */ = {
-			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
-			membershipExceptions = (
-				Info.plist,
-			);
-			target = E408F9AA2E15C04900335E52 /* CueIT Kiosk */;
-		};
-/* End PBXFileSystemSynchronizedBuildFileExceptionSet section */
-
 /* Begin PBXFileSystemSynchronizedRootGroup section */
 		E408F9AD2E15C04900335E52 /* CueIT Kiosk */ = {
 			isa = PBXFileSystemSynchronizedRootGroup;
-			exceptions = (
-				E408F9C92E15C04A00335E52 /* Exceptions for "CueIT Kiosk" folder in "CueIT Kiosk" target */,
-			);
 			path = "CueIT Kiosk";
 			sourceTree = "<group>";
 		};
 /* End PBXFileSystemSynchronizedRootGroup section */
-
-/* Begin PBXFrameworksBuildPhase section */
-		E408F9A82E15C04900335E52 /* Frameworks */ = {
-			isa = PBXFrameworksBuildPhase;
-			buildActionMask = 2147483647;
-			files = (
-			);
-			runOnlyForDeploymentPostprocessing = 0;
-		};
-/* End PBXFrameworksBuildPhase section */
 
 /* Begin PBXGroup section */
 		E408F9A22E15C04900335E52 = {
@@ -53,37 +26,11 @@
 		E408F9AC2E15C04900335E52 /* Products */ = {
 			isa = PBXGroup;
 			children = (
-				E408F9AB2E15C04900335E52 /* CueIT Kiosk.app */,
 			);
 			name = Products;
 			sourceTree = "<group>";
 		};
 /* End PBXGroup section */
-
-/* Begin PBXNativeTarget section */
-		E408F9AA2E15C04900335E52 /* CueIT Kiosk */ = {
-			isa = PBXNativeTarget;
-			buildConfigurationList = E408F9B62E15C04A00335E52 /* Build configuration list for PBXNativeTarget "CueIT Kiosk" */;
-			buildPhases = (
-				E408F9A72E15C04900335E52 /* Sources */,
-				E408F9A82E15C04900335E52 /* Frameworks */,
-				E408F9A92E15C04900335E52 /* Resources */,
-			);
-			buildRules = (
-			);
-			dependencies = (
-			);
-			fileSystemSynchronizedGroups = (
-				E408F9AD2E15C04900335E52 /* CueIT Kiosk */,
-			);
-			name = "CueIT Kiosk";
-			packageProductDependencies = (
-			);
-			productName = "CueIT Kiosk";
-			productReference = E408F9AB2E15C04900335E52 /* CueIT Kiosk.app */;
-			productType = "com.apple.product-type.application";
-		};
-/* End PBXNativeTarget section */
 
 /* Begin PBXProject section */
 		E408F9A32E15C04900335E52 /* Project object */ = {
@@ -92,11 +39,6 @@
 				BuildIndependentTargetsInParallel = 1;
 				LastSwiftUpdateCheck = 1640;
 				LastUpgradeCheck = 1640;
-				TargetAttributes = {
-					E408F9AA2E15C04900335E52 = {
-						CreatedOnToolsVersion = 16.4;
-					};
-				};
 			};
 			buildConfigurationList = E408F9A62E15C04900335E52 /* Build configuration list for PBXProject "CueIT Kiosk" */;
 			developmentRegion = en;
@@ -112,30 +54,9 @@
 			projectDirPath = "";
 			projectRoot = "";
 			targets = (
-				E408F9AA2E15C04900335E52 /* CueIT Kiosk */,
 			);
 		};
 /* End PBXProject section */
-
-/* Begin PBXResourcesBuildPhase section */
-		E408F9A92E15C04900335E52 /* Resources */ = {
-			isa = PBXResourcesBuildPhase;
-			buildActionMask = 2147483647;
-			files = (
-			);
-			runOnlyForDeploymentPostprocessing = 0;
-		};
-/* End PBXResourcesBuildPhase section */
-
-/* Begin PBXSourcesBuildPhase section */
-		E408F9A72E15C04900335E52 /* Sources */ = {
-			isa = PBXSourcesBuildPhase;
-			buildActionMask = 2147483647;
-			files = (
-			);
-			runOnlyForDeploymentPostprocessing = 0;
-		};
-/* End PBXSourcesBuildPhase section */
 
 /* Begin XCBuildConfiguration section */
 		E408F9B42E15C04A00335E52 /* Debug */ = {
@@ -257,68 +178,6 @@
 			};
 			name = Release;
 		};
-		E408F9B72E15C04A00335E52 /* Debug */ = {
-			isa = XCBuildConfiguration;
-			buildSettings = {
-				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
-				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
-				CODE_SIGN_IDENTITY = "Apple Development";
-				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 1;
-				DEVELOPMENT_TEAM = J656RRPZSH;
-				ENABLE_PREVIEWS = YES;
-				GENERATE_INFOPLIST_FILE = NO;
-				INFOPLIST_FILE = "CueIT Kiosk/Info.plist";
-				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
-				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
-				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
-				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPad = "UIInterfaceOrientationPortrait UIInterfaceOrientationPortraitUpsideDown UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
-				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPhone = "UIInterfaceOrientationPortrait UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
-				LD_RUNPATH_SEARCH_PATHS = (
-					"$(inherited)",
-					"@executable_path/Frameworks",
-				);
-				MARKETING_VERSION = 1.0;
-				PRODUCT_BUNDLE_IDENTIFIER = "one.tristen-cueit-kiosks-beta";
-				PRODUCT_NAME = "$(TARGET_NAME)";
-				PROVISIONING_PROFILE_SPECIFIER = "";
-				SWIFT_EMIT_LOC_STRINGS = YES;
-				SWIFT_VERSION = 5.0;
-				TARGETED_DEVICE_FAMILY = "1,2";
-			};
-			name = Debug;
-		};
-		E408F9B82E15C04A00335E52 /* Release */ = {
-			isa = XCBuildConfiguration;
-			buildSettings = {
-				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
-				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
-				CODE_SIGN_IDENTITY = "Apple Development";
-				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 1;
-				DEVELOPMENT_TEAM = J656RRPZSH;
-				ENABLE_PREVIEWS = YES;
-				GENERATE_INFOPLIST_FILE = NO;
-				INFOPLIST_FILE = "CueIT Kiosk/Info.plist";
-				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
-				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
-				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
-				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPad = "UIInterfaceOrientationPortrait UIInterfaceOrientationPortraitUpsideDown UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
-				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPhone = "UIInterfaceOrientationPortrait UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
-				LD_RUNPATH_SEARCH_PATHS = (
-					"$(inherited)",
-					"@executable_path/Frameworks",
-				);
-				MARKETING_VERSION = 1.0;
-				PRODUCT_BUNDLE_IDENTIFIER = "one.tristen-cueit-kiosks-beta";
-				PRODUCT_NAME = "$(TARGET_NAME)";
-				PROVISIONING_PROFILE_SPECIFIER = "";
-				SWIFT_EMIT_LOC_STRINGS = YES;
-				SWIFT_VERSION = 5.0;
-				TARGETED_DEVICE_FAMILY = "1,2";
-			};
-			name = Release;
-		};
 /* End XCBuildConfiguration section */
 
 /* Begin XCConfigurationList section */
@@ -327,15 +186,6 @@
 			buildConfigurations = (
 				E408F9B42E15C04A00335E52 /* Debug */,
 				E408F9B52E15C04A00335E52 /* Release */,
-			);
-			defaultConfigurationIsVisible = 0;
-			defaultConfigurationName = Release;
-		};
-		E408F9B62E15C04A00335E52 /* Build configuration list for PBXNativeTarget "CueIT Kiosk" */ = {
-			isa = XCConfigurationList;
-			buildConfigurations = (
-				E408F9B72E15C04A00335E52 /* Debug */,
-				E408F9B82E15C04A00335E52 /* Release */,
 			);
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;
