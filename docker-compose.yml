@@ -1,0 +1,81 @@
+services:
+  # Database
+  postgres:
+    image: postgres:16
+    environment:
+      POSTGRES_DB: cueit_db
+      POSTGRES_USER: cueit_user
+      POSTGRES_PASSWORD: cueit_password
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U cueit_user -d cueit_db"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # Redis (for caching and sessions)
+  redis:
+    image: redis:7-alpine
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+
+  # API Server
+  api:
+    build:
+      context: ./apps/api-nest
+      dockerfile: Dockerfile
+    environment:
+      - NODE_ENV=development
+      - DATABASE_URL=postgresql://cueit_user:cueit_password@postgres:5432/cueit_db?schema=public
+      - PORT=3001
+    ports:
+      - "3001:3001"
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_started
+    volumes:
+      - ./apps/api-nest:/app
+      - /app/node_modules
+
+  # Portal App
+  portal:
+    build:
+      context: ./apps/portal
+      dockerfile: Dockerfile
+    environment:
+      - NODE_ENV=development
+      - NEXT_PUBLIC_API_URL=http://localhost:3001
+    ports:
+      - "3000:3000"
+    depends_on:
+      - api
+    volumes:
+      - ./apps/portal:/app
+      - /app/node_modules
+
+  # Admin App
+  admin:
+    build:
+      context: ./apps/admin-next
+      dockerfile: Dockerfile
+    environment:
+      - NODE_ENV=development
+      - NEXT_PUBLIC_API_URL=http://localhost:3001
+    ports:
+      - "3002:3000"
+    depends_on:
+      - api
+    volumes:
+      - ./apps/admin-next:/app
+      - /app/node_modules
+
+volumes:
+  postgres_data:
+  redis_data:

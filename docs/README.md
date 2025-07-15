@@ -1,6 +1,6 @@
-# CueIT Documentation
+# QueueIT Documentation
 
-CueIT is an internal help desk application for submitting and tracking IT tickets.
+QueueIT is an internal help desk application for submitting and tracking IT tickets.
 
 ## Table of Contents
 - [Quick Start Guide](#quick-start-guide)
@@ -29,7 +29,7 @@ CueIT is an internal help desk application for submitting and tracking IT ticket
 ```bash
 # Clone and setup
 git clone <repository-url>
-cd CueIT
+cd QueueIT
 ./installers/setup.sh
 
 # Start all services
@@ -43,14 +43,14 @@ cd CueIT
 
 ## Project Overview
 
-CueIT is a comprehensive IT help desk system with multiple components:
+QueueIT is a comprehensive IT help desk system with multiple components:
 
 ### Core Components
-- **cueit-api** - Backend API server (Node.js/Express/SQLite)
-- **cueit-admin** - Web admin interface (React/TypeScript/Vite)
-- **cueit-kiosk** - iOS kiosk application (Swift/SwiftUI)
-- **cueit-slack** - Slack integration service
-- **cueit-macos-swift** - macOS launcher application
+- **packages/api** - Backend API server (Node.js/Express/SQLite)
+- **apps/admin** - Web admin interface (React/TypeScript/Vite)
+- **apps/kiosk** - iOS kiosk application (Swift/SwiftUI)
+- **apps/slack** - Slack integration service
+- **macos/** - macOS launcher application
 
 ### Key Features
 - Ticket submission and management
@@ -62,7 +62,7 @@ CueIT is a comprehensive IT help desk system with multiple components:
 
 ## Components
 
-### cueit-api
+### packages/api
 Express.js backend with SQLite database. Handles ticket submission, user management, kiosk activation, and integrations.
 
 **Key Features:**
@@ -72,7 +72,7 @@ Express.js backend with SQLite database. Handles ticket submission, user managem
 - Rate limiting and input validation
 - Integration with HelpScout, ServiceNow, and Slack
 
-### cueit-admin
+### apps/admin
 React admin interface for managing the help desk system.
 
 **Key Features:**
@@ -82,7 +82,7 @@ React admin interface for managing the help desk system.
 - Real-time status monitoring
 - Responsive design
 
-### cueit-kiosk
+### apps/kiosk
 SwiftUI iPad application for end-user ticket submission.
 
 **Key Features:**
@@ -91,26 +91,26 @@ SwiftUI iPad application for end-user ticket submission.
 - Directory integration for user lookup
 - Touch-friendly interface
 
-### cueit-slack
+### apps/slack
 Slack integration for ticket submission via slash commands.
 
-### cueit-macos-swift
+### macos/
 Native macOS launcher application.
 
 ## Architecture
 
 ```
-┌─────────────────┐    ┌─────────────────┐    ┌─────────────────┐
-│   cueit-admin   │    │   cueit-kiosk   │    │   cueit-slack   │
-│  (React SPA)    │    │  (iPad App)     │    │ (Slack Bot)     │
-└─────────┬───────┘    └─────────┬───────┘    └─────────┬───────┘
-          │                      │                      │
-          └──────────────────────┼──────────────────────┘
-                                 │
-                    ┌─────────────▼──────────────┐
-                    │        cueit-api           │
-                    │   (Express + SQLite)       │
-                    └────────────────────────────┘
+┌───────────────┐    ┌───────────────┐    ┌───────────────┐
+│  apps/admin   │    │  apps/kiosk   │    │  apps/slack   │
+│ (React SPA)   │    │ (iPad App)    │    │ (Slack Bot)   │
+└───────┬───────┘    └───────┬───────┘    └───────┬───────┘
+        │                    │                    │
+        └────────────────────┼────────────────────┘
+                             │
+                ┌────────────▼─────────────┐
+                │      packages/api        │
+                │   (Express + SQLite)    │
+                └─────────────────────────┘
 ```
 
 ## Installation & Setup
@@ -123,23 +123,23 @@ Native macOS launcher application.
 ### Manual Setup
 ```bash
 # Install dependencies for each component
-cd cueit-api && npm ci
-cd ../cueit-admin && npm ci
-cd ../cueit-slack && npm ci
+cd packages/api && npm ci
+cd ../apps/admin && npm ci
+cd ../apps/slack && npm ci
 
 # Initialize environment files
 ./scripts/init-env.sh
 
 # Start services individually
-cd cueit-api && npm start &
-cd cueit-admin && npm run dev &
-cd cueit-slack && npm start &
+cd packages/api && npm start &
+cd ../apps/admin && npm run dev &
+cd ../apps/slack && npm start &
 ```
 
 ### Environment Configuration
 Edit the `.env` files in each component directory:
 
-#### cueit-api/.env
+#### packages/api/.env
 ```
 API_PORT=3000
 SESSION_SECRET=your-secure-secret
@@ -150,9 +150,9 @@ SMTP_HOST=your-smtp-server
 HELPDESK_EMAIL=helpdesk@example.com
 ```
 
-#### cueit-admin/.env
+#### apps/admin/.env
 ```
-VITE_API_URL=http://localhost:3000
+VITE_API_URL=http://localhost:3000/api/v1
 VITE_ADMIN_URL=http://localhost:5173
 ```
 
@@ -175,9 +175,42 @@ VITE_ADMIN_URL=http://localhost:5173
    ```
 
 4. **Access Applications**
-   - CueIT Portal: http://localhost:5173
+   - QueueIT Portal: http://localhost:5173
    - API: http://localhost:3000
    - Kiosk: Build and run in Xcode
+
+# API Versioning and Config Management
+
+QueueIT now supports versioned API endpoints. All routes are available under `/api/v1/` (current) and `/api/v2/` (reserved for future changes). All frontend, scripts, installers, and documentation have been updated to use `/api/v1` endpoints.
+
+## Editable Config via API
+- Branding, SMTP, SSO, status, and directory config are now editable via dedicated API endpoints:
+  - `/api/v1/branding` (GET/PUT)
+  - `/api/v1/smtp-config` (GET/PUT)
+  - `/api/v1/sso-config` (GET/PUT)
+  - `/api/v1/status-config` (GET/PUT)
+  - `/api/v1/directory-config` (GET/PUT)
+- Secrets and infrastructure settings (SMTP password, JWT secret, etc.) remain in environment variables and are never exposed via the API.
+
+## Security
+- All config endpoints require authentication and proper permissions.
+- Secrets are never returned in API responses.
+
+## Migration Notes
+- All legacy endpoints outside `/api/v1` have been removed.
+- All scripts, installers, and documentation reference `/api/v1`.
+- Admin UI forms map to new config endpoints and handle responses/errors gracefully.
+
+## Example Environment Variable Usage
+Set your frontend `.env` files to use the versioned API URL:
+
+```
+VITE_API_URL=http://localhost:3000/api/v1
+```
+
+See [packages/api/README.md](packages/api/README.md#api-versioning) and [docs/quickstart.md](docs/quickstart.md) for more details and request/response examples.
+
+# End of API Versioning and Config Management Section
 
 ## Security
 
@@ -211,21 +244,21 @@ See [SECURITY_FIXES.md](SECURITY_FIXES.md) for detailed security implementation.
 ### Testing
 ```bash
 # Run tests for each component
-cd cueit-api && npm test
-cd cueit-admin && npm test
-cd cueit-slack && npm test
+cd packages/api && npm test
+cd ../apps/admin && npm test
+cd ../apps/slack && npm test
 ```
 
 ### Development Scripts
 ```bash
 # Start development environment
-./cueit-dev.sh
+./queueit-dev.sh
 
 # Test local setup
 ./test-local-setup.sh
 
 # Clean iOS build (if needed)
-cd cueit-kiosk && ./clean-build.sh
+cd apps/kiosk && ./clean-build.sh
 ```
 
 ## Deployment
@@ -233,8 +266,8 @@ cd cueit-kiosk && ./clean-build.sh
 ### Production Deployment
 1. Build all components:
    ```bash
-   cd cueit-admin && npm run build
-   cd cueit-api && npm run build # if applicable
+   cd apps/admin && npm run build
+   cd packages/api && npm run build # if applicable
    ```
 
 2. Configure production environment variables
@@ -253,19 +286,19 @@ cd cueit-kiosk && ./clean-build.sh
 ### Common Issues
 
 #### API Connection Issues
-1. Check if API is running: `curl http://localhost:3000/api/health`
+1. Check if API is running: `curl http://localhost:3000/api/v1/health`
 2. Verify environment variables are set
 3. Check database file permissions
 
 #### iOS Kiosk Build Issues
-1. Clean build: `cd cueit-kiosk && ./clean-build.sh`
+1. Clean build: `cd apps/kiosk && ./clean-build.sh`
 2. Check Xcode version compatibility
 3. Verify iOS simulator connectivity to localhost
 
 #### Authentication Problems
 1. Check session secret is set
-2. Verify admin user exists: `cd cueit-api && node cli.js list`
-3. Reset admin password: `cd cueit-api && node cli.js update-password`
+2. Verify admin user exists: `cd packages/api && node cli.js list`
+3. Reset admin password: `cd packages/api && node cli.js update-password`
 
 ### Log Locations
 - API logs: Check console output or configured log file
@@ -285,8 +318,8 @@ cd cueit-kiosk && ./clean-build.sh
 - See [development guide](development.md) for contributing
 
 ## Component Documentation
-- [API Documentation](cueit-api/README.md)
-- [Admin UI Documentation](cueit-admin/README.md)
-- [iOS Kiosk Documentation](cueit-kiosk/README.md)
-- [Slack Integration](cueit-slack/README.md)
-- [macOS Launcher](cueit-macos-swift/README.md)
+- [API Documentation](packages/api/README.md)
+- [Admin UI Documentation](apps/admin/README.md)
+- [iOS Kiosk Documentation](apps/kiosk/README.md)
+- [Slack Integration](apps/slack/README.md)
+- [macOS Launcher](macos/README.md)

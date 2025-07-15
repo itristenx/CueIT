@@ -70,13 +70,37 @@ HELPDESK_EMAIL=helpdesk@company.com
 - Run `npm install` in each service directory
 
 **Can't connect to admin interface?**
-- Verify the API is running at http://localhost:3000/api/health
+- Verify the API is running at http://localhost:3000/api/v1/health
 - Check browser console for errors
 - Ensure authentication is disabled for development (`DISABLE_AUTH=true`)
 
 **Database issues?**
 - Delete `cueit-api/log.sqlite` and restart to recreate
 - Check file permissions in the cueit-api directory
+
+# CueIT Quickstart
+
+## API Versioning
+- All endpoints are under `/api/v1`.
+- Update all references in scripts, installers, and frontend to use `/api/v1`.
+
+## Editable Config
+- Branding, SMTP, SSO, status, and directory config are editable via API endpoints.
+- Secrets remain in environment variables.
+
+## Environment Variables
+- Set `VITE_API_URL` in frontend `.env` files to API base URL.
+
+## Security
+- All config endpoints require authentication.
+
+## Migration
+- All legacy routes removed. Only `/api/v1` is used.
+
+## Example
+- Start backend: `npm run start`
+- Start frontend: `npm run dev` (ensure `VITE_API_URL` is set)
+# End of Quickstart Section
 
 ## Production Deployment
 
@@ -85,3 +109,5 @@ See [Security Guide](security.md) for production deployment requirements includi
 - Strong passwords and secrets
 - Environment variable security
 - Monitoring setup
+
+VITE_API_URL=http://localhost:3000/api/v1

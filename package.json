@@ -1,9 +1,31 @@
 {
-  "name": "cueit-root",
+  "name": "queueit-root",
   "private": true,
   "type": "module",
   "scripts": {
-    "test": "node --experimental-vm-modules node_modules/jest/bin/jest.js"
+    "test": "node --experimental-vm-modules node_modules/jest/bin/jest.js",
+    "dev": "concurrently \"npm run dev:api\" \"npm run dev:portal\" \"npm run dev:admin\"",
+    "dev:api": "cd apps/api-nest && npm run start:dev",
+    "dev:portal": "cd apps/portal && npm run dev",
+    "dev:admin": "cd apps/admin-next && npm run dev",
+    "build": "npm run build:api && npm run build:portal && npm run build:admin",
+    "build:api": "cd apps/api-nest && npm run build",
+    "build:portal": "cd apps/portal && npm run build",
+    "build:admin": "cd apps/admin-next && npm run build",
+    "start": "npm run start:api",
+    "start:api": "cd apps/api-nest && npm run start:prod",
+    "start:portal": "cd apps/portal && npm run start",
+    "start:admin": "cd apps/admin-next && npm run start",
+    "docker:up": "docker-compose up -d",
+    "docker:down": "docker-compose down",
+    "docker:build": "docker-compose build",
+    "db:migrate": "cd apps/api-nest && npx prisma migrate dev",
+    "db:generate": "cd apps/api-nest && npx prisma generate",
+    "db:studio": "cd apps/api-nest && npx prisma studio",
+    "db:seed": "cd apps/api-nest && npx prisma db seed",
+    "setup": "npm run install:all && npm run db:generate && npm run db:migrate",
+    "install:all": "npm install && cd apps/api-nest && npm install && cd ../portal && npm install && cd ../admin-next && npm install",
+    "clean": "rm -rf node_modules apps/*/node_modules apps/*/.next apps/*/dist"
   },
   "devDependencies": {
     "jest": "^30.0.4"
