@@ -1,7 +1,8 @@
 import { Injectable } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
 import { CreateKBArticleDto, UpdateKBArticleDto } from './dto/kb-article.dto';
-import { KBArticle, ArticleStatus } from '../../generated/prisma';
+import { ArticleStatus } from '../../generated/prisma';
+import type { KBArticle } from '../../generated/prisma';
 
 @Injectable()
 export class KnowledgeBaseService {
@@ -126,7 +127,7 @@ export class KnowledgeBaseService {
     });
 
     const allTags = articles.flatMap(a => a.tags);
-    return [...new Set(allTags)];
+    return [...new Set(allTags)] as string[];
   }
 
   async markHelpful(id: string, helpful: boolean): Promise<KBArticle> {

@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Button, Card, Input, Select, Checkbox, Modal } from '@/components/ui';
+import { Button, Card, Input, Select, Modal } from '@/components/ui';
 import { 
   UserGroupIcon,
   ShieldCheckIcon,
@@ -266,11 +266,17 @@ export const DirectorySSOConfig: React.FC<DirectorySSOConfigProps> = ({ onConfig
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           <div className="space-y-4">
-            <Checkbox
-              label="Enable Directory Integration"
-              checked={directoryConfig.enabled}
-              onChange={(checked) => setDirectoryConfig(prev => ({ ...prev, enabled: checked }))}
-            />
+            <label className="flex items-center">
+              <input
+                type="checkbox"
+                checked={directoryConfig.enabled}
+                onChange={(e) => setDirectoryConfig(prev => ({ ...prev, enabled: e.target.checked }))}
+                className="h-4 w-4 text-primary-600 border-gray-300 rounded focus:ring-primary-500"
+              />
+              <span className="ml-2 text-sm text-gray-700 dark:text-gray-300">
+                Enable Directory Integration
+              </span>
+            </label>
 
             <Select
               label="Directory Provider"
@@ -422,11 +428,17 @@ export const DirectorySSOConfig: React.FC<DirectorySSOConfigProps> = ({ onConfig
         </div>
 
         <div className="space-y-4">
-          <Checkbox
-            label="Enable SSO"
-            checked={ssoConfig.enabled}
-            onChange={(checked) => setSsoConfig(prev => ({ ...prev, enabled: checked }))}
-          />
+          <label className="flex items-center">
+            <input
+              type="checkbox"
+              checked={ssoConfig.enabled}
+              onChange={(e) => setSsoConfig(prev => ({ ...prev, enabled: e.target.checked }))}
+              className="h-4 w-4 text-primary-600 border-gray-300 rounded focus:ring-primary-500"
+            />
+            <span className="ml-2 text-sm text-gray-700 dark:text-gray-300">
+              Enable SSO
+            </span>
+          </label>
 
           {ssoConfig.enabled && (
             <div className="space-y-4">
@@ -704,11 +716,17 @@ export const DirectorySSOConfig: React.FC<DirectorySSOConfigProps> = ({ onConfig
         </div>
 
         <div className="space-y-4">
-          <Checkbox
-            label="Enable SCIM Provisioning"
-            checked={scimConfig.enabled}
-            onChange={(checked) => setScimConfig(prev => ({ ...prev, enabled: checked }))}
-          />
+          <label className="flex items-center">
+            <input
+              type="checkbox"
+              checked={scimConfig.enabled}
+              onChange={(e) => setScimConfig(prev => ({ ...prev, enabled: e.target.checked }))}
+              className="h-4 w-4 text-primary-600 border-gray-300 rounded focus:ring-primary-500"
+            />
+            <span className="ml-2 text-sm text-gray-700 dark:text-gray-300">
+              Enable SCIM Provisioning
+            </span>
+          </label>
 
           {scimConfig.enabled && (
             <div className="space-y-4">
@@ -732,19 +750,31 @@ export const DirectorySSOConfig: React.FC<DirectorySSOConfigProps> = ({ onConfig
 
               <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                 <div>
-                  <Checkbox
-                    label="Auto Provisioning"
-                    checked={scimConfig.autoProvisioning || false}
-                    onChange={(checked) => setScimConfig(prev => ({ ...prev, autoProvisioning: checked }))}
-                  />
+                  <label className="flex items-center">
+                    <input
+                      type="checkbox"
+                      checked={scimConfig.autoProvisioning || false}
+                      onChange={(e) => setScimConfig(prev => ({ ...prev, autoProvisioning: e.target.checked }))}
+                      className="h-4 w-4 text-primary-600 border-gray-300 rounded focus:ring-primary-500"
+                    />
+                    <span className="ml-2 text-sm text-gray-700 dark:text-gray-300">
+                      Auto Provisioning
+                    </span>
+                  </label>
                   <p className="text-xs text-gray-500 mt-1">Automatically create users when provisioned via SCIM</p>
                 </div>
                 <div>
-                  <Checkbox
-                    label="Auto Deprovisioning"
-                    checked={scimConfig.autoDeprovisioning || false}
-                    onChange={(checked) => setScimConfig(prev => ({ ...prev, autoDeprovisioning: checked }))}
-                  />
+                  <label className="flex items-center">
+                    <input
+                      type="checkbox"
+                      checked={scimConfig.autoDeprovisioning || false}
+                      onChange={(e) => setScimConfig(prev => ({ ...prev, autoDeprovisioning: e.target.checked }))}
+                      className="h-4 w-4 text-primary-600 border-gray-300 rounded focus:ring-primary-500"
+                    />
+                    <span className="ml-2 text-sm text-gray-700 dark:text-gray-300">
+                      Auto Deprovisioning
+                    </span>
+                  </label>
                   <p className="text-xs text-gray-500 mt-1">Automatically disable users when deprovisioned via SCIM</p>
                 </div>
                 <Input

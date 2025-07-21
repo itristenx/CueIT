@@ -6,6 +6,28 @@
 //
 
 import SwiftUI
+import Foundation
+
+// Load theme configuration from theme.json
+struct ThemeConfig: Codable {
+    struct Colors: Codable {
+        let primary: String
+        let secondary: String
+        let accent: String
+        let destructive: String
+        let success: String
+        let warning: String
+        let info: String
+        let background: String
+        let foreground: String
+    }
+
+    let colors: Colors
+}
+
+let themeURL = Bundle.main.url(forResource: "theme", withExtension: "json")!
+let themeData = try! Data(contentsOf: themeURL)
+let themeConfig = try! JSONDecoder().decode(ThemeConfig.self, from: themeData)
 
 enum Theme {
     // MARK: - Typography

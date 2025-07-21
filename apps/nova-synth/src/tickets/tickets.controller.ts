@@ -1,3 +1,4 @@
+
 import {
   Controller,
   Get,
@@ -14,45 +15,66 @@ import {
 import { TicketsService } from './tickets.service';
 import { CreateTicketDto, UpdateTicketDto, CreateCommentDto } from './dto/ticket.dto';
 import { ClerkAuthGuard } from '../auth/clerk-auth.guard';
-import { TicketStatus } from '../../generated/prisma';
+import { TicketStatus, Priority, TicketType } from '../../generated/prisma';
 
 @Controller('tickets')
 @UseGuards(ClerkAuthGuard)
 export class TicketsController {
   constructor(private readonly ticketsService: TicketsService) {}
 
-  // V2 Enhanced endpoints (default)
-  @Post()
+  /**
+   * Cancel (undo) a ticket if within the undo window
+   */
+  @Patch(':id/undo')
   @Version('2')
-  async create(@Body() createTicketDto: CreateTicketDto, @Request() req) {
+  async undoTicketV2(@Param('id') id: string, @Request() req) {
     const user = req.user;
-    const userIP = req.ip || req.connection.remoteAddress;
-    
-    // Enhanced validation and security for v2
-    if (!createTicketDto.title?.trim()) {
-      throw new Error('Title is required and cannot be empty');
-    }
-    
-    if (!createTicketDto.description?.trim()) {
-      throw new Error('Description is required and cannot be empty');
-    }
-    
-    // Additional security checks
-    const sanitizedDto = {
-      ...createTicketDto,
-      title: createTicketDto.title.trim(),
-      description: createTicketDto.description.trim(),
+    const result = await this.ticketsService.cancelTicket(id, user.sub);
+    return {
+      success: result.success,
+      message: result.message,
+      version: '2.0',
+      timestamp: new Date().toISOString(),
     };
-    
-    const ticket = await this.ticketsService.create(sanitizedDto, user.sub, userIP);
-    
-    // Enhanced response format for v2
+  }
+
+  // --- Reassignment Lock Endpoints ---
+  @Patch(':id/lock-reassignment')
+  @Version('2')
+  async lockReassignmentV2(@Param('id') id: string, @Request() req) {
+    const user = req.user;
+    const ticket = await this.ticketsService.lockReassignment(id, user.sub);
     return {
       success: true,
       data: ticket,
       version: '2.0',
       timestamp: new Date().toISOString(),
     };
+  }
+
+  @Patch(':id/unlock-reassignment')
+  @Version('2')
+  async unlockReassignmentV2(@Param('id') id: string, @Request() req) {
+    const user = req.user;
+    const ticket = await this.ticketsService.unlockReassignment(id, user.sub);
+    return {
+      success: true,
+      data: ticket,
+      version: '2.0',
+      timestamp: new Date().toISOString(),
+    };
+  }
+
+  @Patch(':id/lock-reassignment')
+  async lockReassignment(@Param('id') id: string, @Request() req) {
+    const user = req.user;
+    return this.ticketsService.lockReassignment(id, user.sub);
+  }
+
+  @Patch(':id/unlock-reassignment')
+  async unlockReassignment(@Param('id') id: string, @Request() req) {
+    const user = req.user;
+    return this.ticketsService.unlockReassignment(id, user.sub);
   }
 
   @Get()
@@ -275,5 +297,80 @@ export class TicketsController {
   ) {
     const user = req.user;
     return this.ticketsService.addComment(id, createCommentDto, user.sub);
+  }
+
+  @Patch(':id/archive')
+  async archive(@Param('id') id: string, @Request() req) {
+    const user = req.user;
+    return this.ticketsService.archive(id, user.sub);
+  }
+
+  @Patch(':id/unarchive')
+  async unarchive(@Param('id') id: string, @Request() req) {
+    const user = req.user;
+    return this.ticketsService.unarchive(id, user.sub);
+  }
+
+  @Get('export/:format')
+  async exportTickets(
+    @Param('format') format: 'csv' | 'pdf' | 'json',
+    @Request() req,
+    @Query('status') status?: TicketStatus,
+    @Query('startDate') startDate?: string,
+    @Query('endDate') endDate?: string,
+    @Query('assigneeId') assigneeId?: string,
+    @Query('creatorId') creatorId?: string,
+  ) {
+    const filters = {
+      status,
+      startDate: startDate ? new Date(startDate) : undefined,
+      endDate: endDate ? new Date(endDate) : undefined,
+      assigneeId,
+      creatorId,
+    };
+
+    const result = await this.ticketsService.exportTickets(format, filters);
+    
+    // In a real implementation, you'd set appropriate headers and return the file
+    return {
+      message: 'Export generated successfully',
+      filename: result.filename,
+      contentType: result.contentType,
+      data: result.data.length || result.data.split('\n').length,
+    };
+  }
+
+  @Post(':id/merge')
+  async mergeTickets(
+    @Param('id') targetTicketId: string,
+    @Body() data: { sourceTicketIds: string[] },
+    @Request() req,
+  ) {
+    const user = req.user;
+    return this.ticketsService.mergeTickets(targetTicketId, data.sourceTicketIds, user.sub);
+  }
+
+  @Post(':id/split')
+  async splitTicket(
+    @Param('id') originalTicketId: string,
+    @Body() data: {
+      newTicketData: {
+        title: string;
+        description: string;
+        priority?: Priority;
+        type?: TicketType;
+        category?: string;
+      };
+      commentIdsToMove: string[];
+    },
+    @Request() req,
+  ) {
+    const user = req.user;
+    return this.ticketsService.splitTicket(
+      originalTicketId,
+      data.newTicketData,
+      data.commentIdsToMove,
+      user.sub
+    );
   }
 }

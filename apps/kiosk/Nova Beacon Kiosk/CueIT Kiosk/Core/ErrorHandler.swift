@@ -1,6 +1,6 @@
 //
 //  ErrorHandler.swift
-//  CueIT Kiosk
+//  Nova Beacon Kiosk
 //
 //  Comprehensive error handling and recovery for kiosk operations
 //

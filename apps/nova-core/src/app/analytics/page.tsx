@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
+import { apiRequest } from '../../lib/api';
 import { AdminLayout } from '@/components/layout';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -64,13 +65,9 @@ export default function AnalyticsPage() {
       setLoading(true);
       setError(null);
       
-      // This would call the actual API
-      const response = await fetch(`/api/v2/analytics?timeRange=${timeRange}&department=${department}`);
-      if (!response.ok) {
-        throw new Error('Failed to fetch analytics data');
-      }
-      const result = await response.json();
-      setData(result);
+        // Use shared API client
+        const result = await apiRequest(`/api/v2/analytics?timeRange=${timeRange}&department=${department}`);
+        setData(result);
     } catch (err) {
       console.error('Analytics fetch error:', err);
       setError('Failed to load analytics data');

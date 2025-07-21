@@ -28,9 +28,13 @@ export class NovaIdService {
     // Create user with Nova ID
     await this.prisma.user.create({
       data: {
-        ...userData,
-        id: novaId,
-        clerkId: userData.email, // Temporary mapping
+        email: userData.email!,
+        firstName: userData.firstName!,
+        lastName: userData.lastName!,
+        clerkId: userData.email || novaId, // Temporary mapping
+        role: userData.role as any || 'END_USER',
+        department: userData.department || null,
+        title: userData.title || null,
       },
     });
 
@@ -40,6 +44,9 @@ export class NovaIdService {
   async getNovaIdProfile(novaId: string): Promise<NovaIdUser | null> {
     const user = await this.prisma.user.findUnique({
       where: { id: novaId },
+      include: {
+        userXP: true, // Include XP data if available
+      },
     });
 
     if (!user) return null;
@@ -50,33 +57,39 @@ export class NovaIdService {
       email: user.email,
       firstName: user.firstName,
       lastName: user.lastName,
-      displayName: user.displayName,
+      displayName: user.displayName || undefined,
       role: user.role,
-      department: user.department,
-      title: user.title,
-      xpLevel: user.xpLevel || 1,
-      stardustPoints: user.stardustPoints || 0,
+      department: user.department || undefined,
+      title: user.title || undefined,
+      xpLevel: user.userXP?.level || 1,
+      stardustPoints: user.userXP?.stardust || 0,
       createdAt: user.createdAt,
       updatedAt: user.updatedAt,
     };
   }
 
   async updateNovaAscendProgress(novaId: string, xpGained: number, stardustGained: number) {
-    return await this.prisma.user.update({
-      where: { id: novaId },
-      data: {
-        xpLevel: {
-          increment: xpGained,
-        },
-        stardustPoints: {
+    // Update XP in the UserXP table
+    return await this.prisma.userXP.upsert({
+      where: { userId: novaId },
+      update: {
+        stardust: {
           increment: stardustGained,
         },
+        level: {
+          increment: Math.floor(xpGained / 1000), // Level up every 1000 XP
+        },
+      },
+      create: {
+        userId: novaId,
+        stardust: stardustGained,
+        level: 1 + Math.floor(xpGained / 1000),
       },
     });
   }
 
   private generateNovaId(): string {
     // Generate unique Nova ID (UUID-like)
-    return `nova_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+    return `novaid_${Math.random().toString(36).substr(2, 9)}`;
   }
 }

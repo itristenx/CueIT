@@ -1,3 +1,16 @@
+// Email Template Management
+model EmailTemplate {
+  id          String   @id @default(cuid())
+  name        String   @unique
+  subject     String
+  htmlContent String
+  textContent String
+  variables   String   // Comma-separated list of variable names
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@map("email_templates")
+}
 // This is your Prisma schema file,
 // learn more about it in the docs: https://pris.ly/d/prisma-schema
 
@@ -13,6 +26,8 @@ datasource db {
 
 // Core User Management
 model User {
+  createdRecurringRules RecurringTicketRule[] @relation("UserRecurringRules")
+  assignedRecurringRules RecurringTicketRule[] @relation("RecurringRuleAssignee")
   id                String             @id @default(cuid())
   clerkId           String             @unique
   novaId            String             @unique @default(cuid()) // Nova Helix ID
@@ -66,7 +81,36 @@ model UserGroup {
 }
 
 // Ticket Management
+
+model RecurringTicketRule {
+  id            String   @id @default(cuid())
+  creatorId     String
+  creator       User     @relation("UserRecurringRules", fields: [creatorId], references: [id])
+  title         String
+  description   String
+  priority      Priority @default(MEDIUM)
+  type          TicketType @default(INC)
+  category      String?
+  tags          String[]
+  assigneeId    String?
+  assignee      User?    @relation("RecurringRuleAssignee", fields: [assigneeId], references: [id])
+  schedule      String   // Cron or interval expression
+  startDate     DateTime
+  endDate       DateTime?
+  lastRunAt     DateTime?
+  nextRunAt     DateTime?
+  isActive      Boolean  @default(true)
+  metadata      Json?
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  generatedTickets Ticket[] @relation("RecurringRuleTickets")
+
+  @@map("recurring_ticket_rules")
+}
 model Ticket {
+  recurringRuleId   String?
+  recurringRule     RecurringTicketRule? @relation("RecurringRuleTickets", fields: [recurringRuleId], references: [id])
   id                String           @id @default(cuid())
   ticketNumber      String           @unique
   title             String
@@ -79,12 +123,14 @@ model Ticket {
   subcategory       String?
   tags              String[]
   metadata          Json?            // Custom fields
+  reassignmentLocked Boolean         @default(false) // Prevents assignee changes if true
   createdAt         DateTime         @default(now())
   updatedAt         DateTime         @updatedAt
   resolvedAt        DateTime?
   closedAt          DateTime?
   dueDate           DateTime?
   slaBreachAt       DateTime?        // SLA breach timestamp
+  undoWindowExpiresAt DateTime?      // If set, ticket can be undone until this time
   
   // Relationships
   creatorId         String
@@ -236,6 +282,7 @@ model AuditLog {
   oldValues Json?
   newValues Json?
   timestamp DateTime @default(now())
+  // Removed invalid recurring rule and XP transaction relations
 
   // Relationships
   userId    String
@@ -543,9 +590,9 @@ model UserXP {
 }
 
 model XPTransaction {
+  user      User   @relation(fields: [userId], references: [id], onDelete: Cascade)
   id          String   @id @default(cuid())
   userId      String
-  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
   userXpId    String
   userXp      UserXP   @relation(fields: [userXpId], references: [id], onDelete: Cascade)
   action      String   // Action that earned XP

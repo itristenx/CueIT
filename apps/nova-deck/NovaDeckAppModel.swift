@@ -17,15 +17,15 @@ enum NavigationItem: String, CaseIterable {
     var icon: String {
         switch self {
         case .dashboard: return "house"
-        case .tickets: return "doc.text"
-        case .kiosks: return "desktopcomputer"
-        case .kioskManagement: return "qrcode.viewfinder"
-        case .users: return "person.2"
-        case .analytics: return "chart.bar"
-        case .notifications: return "bell"
-        case .integrations: return "gear.2"
+        case .orbit: return "globe"
+        case .core: return "doc.text"
+        case .pulse: return "desktopcomputer"
+        case .lore: return "qrcode.viewfinder"
+        case .beacon: return "person.2"
+        case .comms: return "chart.bar"
+        case .cosmo: return "bell"
+        case .ascend: return "gear.2"
         case .settings: return "gearshape"
-        case .services: return "server.rack"
         }
     }
 }
@@ -46,9 +46,9 @@ class NovaDeckAppModel: ObservableObject {
     @Published var showSetup: Bool = false
     
     // Service management
-    @Published var startAPI = true
-    @Published var startAdmin = true
-    @Published var startSlack = false
+    @Published var startSynth = true
+    @Published var startCore = true
+    @Published var startComms = false
     
     private var cancellables = Set<AnyCancellable>()
     private var processes: [String: Process] = [:]
@@ -83,9 +83,9 @@ class NovaDeckAppModel: ObservableObject {
     
     private func loadServices() {
         services = [
-            ServiceStatus(name: "CueIT API", port: 3000, isRunning: false, url: "http://localhost:3000"),
-            ServiceStatus(name: "CueIT Admin", port: 5175, isRunning: false, url: "http://localhost:5175"),
-            ServiceStatus(name: "CueIT Slack", port: 3001, isRunning: false, url: "http://localhost:3001")
+            ServiceStatus(name: "Nova Synth", port: 3000, isRunning: false, url: "http://localhost:3000"),
+            ServiceStatus(name: "Nova Core", port: 5175, isRunning: false, url: "http://localhost:5175"),
+            ServiceStatus(name: "Nova Comms", port: 3001, isRunning: false, url: "http://localhost:3001")
         ]
     }
     
@@ -133,9 +133,9 @@ class NovaDeckAppModel: ObservableObject {
     
     func startServices() {
         let selectedServices = [
-            startAPI ? "api" : nil,
-            startAdmin ? "admin" : nil,
-            startSlack ? "slack" : nil
+            startSynth ? "synth" : nil,
+            startCore ? "core" : nil,
+            startComms ? "comms" : nil
         ].compactMap { $0 }
         
         for service in selectedServices {

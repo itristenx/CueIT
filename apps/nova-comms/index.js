@@ -155,7 +155,9 @@ app.command('/new-ticket', async ({ ack, body, client }) => {
   await ack();
   
   try {
-    console.log('Fetching configuration for ticket modal...');
+    if (process.env.NODE_ENV === 'development') {
+      console.debug('Fetching configuration for ticket modal...');
+    }
     
     const token = jwt.sign(
       { type: 'slack', userId: body.user_id },

@@ -1,6 +1,6 @@
 //
 //  EnhancedConfigService.swift
-//  CueIT Kiosk
+//  Nova Beacon Kiosk
 //
 //  Enhanced configuration service with sync capabilities and offline PIN support
 //

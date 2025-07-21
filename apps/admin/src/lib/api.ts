@@ -1,44 +1,21 @@
 import axios, { AxiosInstance } from 'axios';
-import type {
-  User,
-  Role,
+import {
+  User as UserType,
+  Role as RoleType,
   Permission,
-  Kiosk,
+  Kiosk as KioskType,
   Log,
   Config,
   Notification,
   DirectoryUser,
   Integration,
-  KioskActivation,
-  KioskConfig,
   Asset,
   ApiResponse,
   LoginCredentials,
   AuthToken,
   DashboardStats,
-  ActivityLog,
-  ScheduleConfig,
-  OfficeHours,
-  KioskAdminLoginRequest,
-  KioskAdminLoginResponse,
-  GlobalConfiguration,
-  KioskConfiguration,
-  ConfigScope,
-  ConfigurationSummary,
+  ActivityLog
 } from '@/types';
-import {
-  mockUsers,
-  mockKiosks,
-  mockLogs,
-  mockConfig,
-  mockIntegrations,
-  mockRoles,
-  mockPermissions,
-  mockNotifications,
-  mockDashboardStats,
-  delay,
-  shouldSimulateError,
-} from './mockData';
 
 // Check if we should use mock mode (when API is not available or VITE_USE_MOCK_API is true)
 const USE_MOCK_API = import.meta.env.VITE_USE_MOCK_API === 'true';
@@ -101,71 +78,63 @@ class ApiClient {
     return storedUrl || envUrl || defaultUrl;
   }
 
-  // Mock method helper
-  private async mockRequest<T>(mockData: T, errorRate: number = 0.05): Promise<T> {
-    await delay(200 + Math.random() * 500); // Simulate network delay
-    
-    if (shouldSimulateError(errorRate)) {
-      throw new Error('Simulated API error');
-    }
-    
-    return mockData;
-  }
-
   // Auth
   async login(credentials: LoginCredentials): Promise<AuthToken> {
     if (this.useMockMode) {
-      return this.mockRequest({ token: 'mock_token_12345' });
+      return { token: 'mock_token_12345' } as AuthToken;
     }
 
     const response = await this.client.post<AuthToken>('/api/v1/login', credentials);
     return response.data;
   }
 
-  async me(token?: string): Promise<User> {
+  async me(token?: string): Promise<UserType> {
     if (this.useMockMode) {
-      return this.mockRequest(mockUsers[0]);
+      return { id: 1, name: 'John Doe', email: 'john.doe@example.com', role: 'admin' };
     }
 
     const headers = token ? { Authorization: `Bearer ${token}` } : {};
-    const response = await this.client.get<User>('/api/v1/me', { headers });
+    const response = await this.client.get<UserType>('/api/v1/me', { headers });
     return response.data;
   }
 
   // Users
-  async getUsers(): Promise<User[]> {
+  async getUsers(): Promise<UserType[]> {
     if (this.useMockMode) {
-      return this.mockRequest(mockUsers);
+      return [
+        { id: 1, name: 'John Doe', email: 'john.doe@example.com', role: 'admin' },
+        { id: 2, name: 'Jane Smith', email: 'jane.smith@example.com', role: 'user' }
+      ];
     }
 
-    const response = await this.client.get<User[]>('/api/v1/users');
+    const response = await this.client.get<UserType[]>('/api/v1/users');
     return response.data;
   }
 
-  async createUser(user: Omit<User, 'id'>): Promise<User> {
+  async createUser(user: Omit<UserType, 'id'>): Promise<UserType> {
     if (this.useMockMode) {
       const newUser = { ...user, id: Date.now() };
-      return this.mockRequest(newUser);
+      return newUser;
     }
 
-    const response = await this.client.post<User>('/api/v1/users', user);
+    const response = await this.client.post<UserType>('/api/v1/users', user);
     return response.data;
   }
 
-  async updateUser(id: number, user: Partial<User>): Promise<User> {
+  async updateUser(id: number, user: Partial<UserType>): Promise<UserType> {
     if (this.useMockMode) {
-      const existingUser = mockUsers.find(u => u.id === id) || mockUsers[0];
+      const existingUser = { id, name: 'John Doe', email: 'john.doe@example.com', role: 'admin' };
       const updatedUser = { ...existingUser, ...user };
-      return this.mockRequest(updatedUser);
+      return updatedUser;
     }
 
-    const response = await this.client.put<User>(`/api/v1/users/${id}`, user);
+    const response = await this.client.put<UserType>(`/api/v1/users/${id}`, user);
     return response.data;
   }
 
   async deleteUser(id: number): Promise<ApiResponse> {
     if (this.useMockMode) {
-      return this.mockRequest({ message: 'User deleted successfully' });
+      return { message: 'User deleted successfully' };
     }
 
     const response = await this.client.delete<ApiResponse>(`/api/v1/users/${id}`);
@@ -173,37 +142,44 @@ class ApiClient {
   }
 
   // Roles and Permissions
-  async getRoles(): Promise<Role[]> {
+  async getRoles(): Promise<RoleType[]> {
     if (this.useMockMode) {
-      return this.mockRequest(mockRoles);
+      return [
+        { id: 1, name: 'Admin', permissions: ['*'] },
+        { id: 2, name: 'User', permissions: ['read'] }
+      ];
     }
 
-    const response = await this.client.get<Role[]>('/api/v1/roles');
+    const response = await this.client.get<RoleType[]>('/api/v1/roles');
     return response.data;
   }
 
   async getPermissions(): Promise<Permission[]> {
     if (this.useMockMode) {
-      return this.mockRequest(mockPermissions);
+      return [
+        { id: 1, name: 'Read', description: 'Read access' },
+        { id: 2, name: 'Write', description: 'Write access' },
+        { id: 3, name: 'Execute', description: 'Execute access' }
+      ];
     }
 
     const response = await this.client.get<Permission[]>('/api/v1/roles/permissions');
     return response.data;
   }
 
-  async createRole(role: Omit<Role, 'id'>): Promise<Role> {
+  async createRole(role: Omit<RoleType, 'id'>): Promise<RoleType> {
     if (this.useMockMode) {
       const newRole = { ...role, id: Date.now() };
-      return this.mockRequest(newRole);
+      return newRole;
     }
 
-    const response = await this.client.post<Role>('/api/v1/roles', role);
+    const response = await this.client.post<RoleType>('/api/v1/roles', role);
     return response.data;
   }
 
-  async updateRole(id: number, role: Partial<Role>): Promise<ApiResponse> {
+  async updateRole(id: number, role: Partial<RoleType>): Promise<ApiResponse> {
     if (this.useMockMode) {
-      return this.mockRequest({ message: 'Role updated successfully' });
+      return { message: 'Role updated successfully' };
     }
 
     const response = await this.client.put<ApiResponse>(`/api/v1/roles/${id}`, role);
@@ -212,7 +188,7 @@ class ApiClient {
 
   async deleteRole(id: number): Promise<ApiResponse> {
     if (this.useMockMode) {
-      return this.mockRequest({ message: 'Role deleted successfully' });
+      return { message: 'Role deleted successfully' };
     }
 
     const response = await this.client.delete<ApiResponse>(`/api/v1/roles/${id}`);
@@ -220,47 +196,50 @@ class ApiClient {
   }
 
   // Kiosks
-  async getKiosks(): Promise<Kiosk[]> {
+  async getKiosks(): Promise<KioskType[]> {
     if (this.useMockMode) {
-      return this.mockRequest(mockKiosks);
+      return [
+        { id: '1', name: 'Kiosk 1', location: 'Lobby', active: true },
+        { id: '2', name: 'Kiosk 2', location: 'Break Room', active: false }
+      ];
     }
 
-    const response = await this.client.get<Kiosk[]>('/api/v1/kiosks');
+    const response = await this.client.get<KioskType[]>('/api/v1/kiosks');
     return response.data;
   }
 
-  async updateKiosk(id: string, kiosk: Partial<Kiosk>): Promise<Kiosk> {
+  async updateKiosk(id: string, kiosk: Partial<KioskType>): Promise<KioskType> {
     if (this.useMockMode) {
-      const existingKiosk = mockKiosks.find(k => k.id === id) || mockKiosks[0];
+      const existingKiosk = { id, name: 'Kiosk 1', location: 'Lobby', active: true };
       const updatedKiosk = { ...existingKiosk, ...kiosk };
-      return this.mockRequest(updatedKiosk);
+      return updatedKiosk;
     }
 
-    const response = await this.client.put<Kiosk>(`/api/v1/kiosks/${id}`, kiosk);
+    const response = await this.client.put<KioskType>(`/api/v1/kiosks/${id}`, kiosk);
     return response.data;
   }
 
   async deleteKiosk(id: string): Promise<ApiResponse> {
     if (this.useMockMode) {
-      return this.mockRequest({ message: 'Kiosk deleted successfully' });
+      return { message: 'Kiosk deleted successfully' };
     }
 
     const response = await this.client.delete<ApiResponse>(`/api/v1/kiosks/${id}`);
     return response.data;
   }
 
-  async activateKiosk(id: string): Promise<Partial<Kiosk>> {
+  async activateKiosk(id: string): Promise<Partial<KioskType>> {
     if (this.useMockMode) {
-      return this.mockRequest({ id, active: true });
+      return { id, active: true };
     }
 
-    const response = await this.client.post<Partial<Kiosk>>(`/api/v1/kiosks/${id}/activate`);
+    const response = await this.client.post<Partial<KioskType>>(`/api/v1/kiosks/${id}/activate`);
     return response.data;
   }
 
   async deactivateKiosk(id: string): Promise<ApiResponse> {
     if (this.useMockMode) {
-      return this.mockRequest({ message: 'Kiosk deactivated successfully' });
+      return { message: 'Kiosk deactivated successfully' };
     }
 
     const response = await this.client.post<ApiResponse>(`/api/v1/kiosks/${id}/deactivate`);
@@ -275,14 +254,14 @@ class ApiClient {
       console.error('Error generating kiosk activation:', error);
       // Fallback to mock only if API is completely unavailable
       if (this.useMockMode || !navigator.onLine) {
-        return this.mockRequest({
+        return {
           id: 'activation_' + Date.now(),
           code: 'ABC' + Math.floor(Math.random() * 1000),
           qrCode: 'data:image/png;base64,mock_qr_code',
           expiresAt: new Date(Date.now() + 3600 * 1000).toISOString(),
           used: false,
           createdAt: new Date().toISOString()
-        });
+        };
       }
       throw error;
     }
@@ -291,9 +270,9 @@ class ApiClient {
   // Kiosk Systems Configuration
   async getKioskSystems(): Promise<{ systems: string[] }> {
     if (this.useMockMode) {
-      return this.mockRequest({
+      return {
         systems: ['Desktop', 'Laptop', 'Mobile', 'Network', 'Printer', 'Software', 'Account Access']
-      });
+      };
     }
 
     const response = await this.client.get<{ systems: string[] }>('/api/v1/kiosks/systems');
@@ -302,7 +281,7 @@ class ApiClient {
 
   async updateKioskSystems(systems: string[]): Promise<ApiResponse> {
     if (this.useMockMode) {
-      return this.mockRequest({ message: 'Kiosk systems updated successfully' });
+      return { message: 'Kiosk systems updated successfully' };
     }
 
     const response = await this.client.put<ApiResponse>('/api/v1/kiosks/systems', { systems });
@@ -312,7 +291,7 @@ class ApiClient {
   // Remote Kiosk Management
   async refreshKioskConfig(id: string): Promise<ApiResponse> {
     if (this.useMockMode) {
-      return this.mockRequest({ message: 'Config refresh requested' });
+      return { message: 'Config refresh requested' };
     }
 
     const response = await this.client.post<ApiResponse>(`/api/v1/kiosks/${id}/refresh-config`);
@@ -321,7 +300,7 @@ class ApiClient {
 
   async resetKiosk(id: string): Promise<ApiResponse> {
     if (this.useMockMode) {
-      return this.mockRequest({ message: 'Kiosk reset successfully' });
+      return { message: 'Kiosk reset successfully' };
     }
 
     const response = await this.client.post<ApiResponse>(`/api/v1/kiosks/${id}/reset`);
@@ -331,7 +310,7 @@ class ApiClient {
   // Server Management
   async restartServer(): Promise<ApiResponse> {
     if (this.useMockMode) {
-      return this.mockRequest({ message: 'Server restart initiated' });
+      return { message: 'Server restart initiated' };
     }
 
     const response = await this.client.post<ApiResponse>('/api/v1/server/restart');
@@ -340,12 +319,12 @@ class ApiClient {
 
   async getServerStatus(): Promise<any> {
     if (this.useMockMode) {
-      return this.mockRequest({
+      return {
         status: 'running',
         uptime: 12345,
         version: '1.0.0',
         nodeVersion: 'v18.0.0'
-      });
+      };
     }
 
     const response = await this.client.get('/api/v1/server/status');
@@ -355,7 +334,10 @@ class ApiClient {
   // Logs/Tickets
   async getLogs(): Promise<Log[]> {
     if (this.useMockMode) {
-      return this.mockRequest(mockLogs);
+      return [
+        { id: 1, ticketId: 101, name: 'John Doe', email: 'john.doe@example.com', title: 'Issue with kiosk', system: 'Kiosk 1', urgency: 'high', timestamp: '2025-01-01T10:00:00Z' },
+        { id: 2, ticketId: 102, name: 'Jane Smith', email: 'jane.smith@example.com', title: 'Network issue', system: 'Network', urgency: 'medium', timestamp: '2025-01-02T11:00:00Z' }
+      ];
     }
 
     const response = await this.client.get<Log[]>('/api/v1/logs');
@@ -364,7 +346,7 @@ class ApiClient {
 
   async deleteLog(id: number): Promise<ApiResponse> {
     if (this.useMockMode) {
-      return this.mockRequest({ message: 'Log deleted successfully' });
+      return { message: 'Log deleted successfully' };
     }
 
     const response = await this.client.delete<ApiResponse>(`/api/v1/logs/${id}`);
@@ -375,7 +357,10 @@ class ApiClient {
     if (this.useMockMode) {
       // Create a mock CSV blob
       const csvContent = 'ID,Ticket ID,Name,Email,Title,System,Urgency,Timestamp\n' +
-        mockLogs.map(log => 
+        [
+          { id: 1, ticketId: 101, name: 'John Doe', email: 'john.doe@example.com', title: 'Issue with kiosk', system: 'Kiosk 1', urgency: 'high', timestamp: '2025-01-01T10:00:00Z' },
+          { id: 2, ticketId: 102, name: 'Jane Smith', email: 'jane.smith@example.com', title: 'Network issue', system: 'Network', urgency: 'medium', timestamp: '2025-01-02T11:00:00Z' }
+        ].map(log => 
           `${log.id},${log.ticketId},${log.name},${log.email},${log.title},${log.system},${log.urgency},${log.timestamp}`
         ).join('\n');
       return new Blob([csvContent], { type: 'text/csv' });
@@ -387,7 +372,7 @@ class ApiClient {
 
   async clearLogs(): Promise<ApiResponse> {
     if (this.useMockMode) {
-      return this.mockRequest({ message: 'All logs cleared successfully' });
+      return { message: 'All logs cleared successfully' };
     }
 
     const response = await this.client.delete<ApiResponse>('/api/v1/logs');
@@ -397,7 +382,12 @@ class ApiClient {
   // Config
   async getConfig(): Promise<Config> {
     if (this.useMockMode) {
-      return this.mockRequest(mockConfig);
+      return {
+        id: 1,
+        setting1: 'Value 1',
+        setting2: 'Value 2',
+        setting3: 'Value 3'
+      };
     }
 
     const response = await this.client.get<Config>('/api/v1/config');
@@ -406,8 +396,8 @@ class ApiClient {
 
   async updateConfig(config: Partial<Config>): Promise<Config> {
     if (this.useMockMode) {
-      const updatedConfig = { ...mockConfig, ...config };
-      return this.mockRequest(updatedConfig);
+      const updatedConfig = { ...Config, ...config };
+      return updatedConfig;
     }
 
     const response = await this.client.put<Config>('/api/v1/config', config);
@@ -417,7 +407,10 @@ class ApiClient {
   // Notifications
   async getNotifications(): Promise<Notification[]> {
     if (this.useMockMode) {
-      return this.mockRequest(mockNotifications);
+      return [
+        { id: 1, message: 'Kiosk 1 is offline', type: 'alert', level: 'high', createdAt: '2025-01-01T10:00:00Z' },
+        { id: 2, message: 'New software update available', type: 'info', level: 'medium', createdAt: '2025-01-02T11:00:00Z' }
+      ];
     }
 
     const response = await this.client.get<Notification[]>('/api/v1/notifications');
@@ -431,7 +424,7 @@ class ApiClient {
         id: Date.now(),
         createdAt: new Date().toISOString()
       };
-      return this.mockRequest(newNotification);
+      return newNotification;
     }
 
     // Map frontend notification to backend format
@@ -447,7 +440,7 @@ class ApiClient {
 
   async deleteNotification(id: number): Promise<ApiResponse> {
     if (this.useMockMode) {
-      return this.mockRequest({ message: 'Notification deleted successfully' });
+      return { message: 'Notification deleted successfully' };
     }
 
     const response = await this.client.delete<ApiResponse>(`/api/v1/notifications/${id}`);
@@ -457,16 +450,14 @@ class ApiClient {
   // Directory
   async searchDirectory(query: string): Promise<DirectoryUser[]> {
     if (this.useMockMode) {
-      const mockDirectoryUsers: DirectoryUser[] = mockUsers.map(user => ({
-        id: user.id.toString(),
-        name: user.name,
-        email: user.email,
-        department: 'Engineering'
-      })).filter(user => 
+      const mockDirectoryUsers: DirectoryUser[] = [
+        { id: '1', name: 'John Doe', email: 'john.doe@example.com', department: 'Engineering' },
+        { id: '2', name: 'Jane Smith', email: 'jane.smith@example.com', department: 'Marketing' }
+      ].filter(user => 
         user.name.toLowerCase().includes(query.toLowerCase()) || 
         user.email.toLowerCase().includes(query.toLowerCase())
       );
-      return this.mockRequest(mockDirectoryUsers);
+      return mockDirectoryUsers;
     }
 
     const response = await this.client.get<DirectoryUser[]>(`/api/v1/directory/search?q=${encodeURIComponent(query)}`);
@@ -476,7 +467,10 @@ class ApiClient {
   // Integrations
   async getIntegrations(): Promise<Integration[]> {
     if (this.useMockMode) {
-      return this.mockRequest(mockIntegrations);
+      return [
+        { id: 1, name: 'Slack', type: 'incoming-webhook', enabled: true },
+        { id: 2, name: 'Email', type: 'smtp', enabled: false }
+      ];
     }
 
     const response = await this.client.get<Integration[]>('/api/v1/integrations');
@@ -486,7 +480,7 @@ class ApiClient {
   async createIntegration(integration: Omit<Integration, 'id'>): Promise<Integration> {
     if (this.useMockMode) {
       const newIntegration = { ...integration, id: Date.now() };
-      return this.mockRequest(newIntegration);
+      return newIntegration;
     }
 
     const response = await this.client.post<Integration>('/api/v1/integrations', integration);
@@ -495,9 +489,9 @@ class ApiClient {
 
   async updateIntegration(id: number, integration: Partial<Integration>): Promise<Integration> {
     if (this.useMockMode) {
-      const existingIntegration = mockIntegrations.find(i => i.id === id) || mockIntegrations[0];
+      const existingIntegration = { id, name: 'Slack', type: 'incoming-webhook', enabled: true };
       const updatedIntegration = { ...existingIntegration, ...integration };
-      return this.mockRequest(updatedIntegration);
+      return updatedIntegration;
     }
 
     const response = await this.client.put<Integration>(`/api/v1/integrations/${id}`, integration);
@@ -506,7 +500,7 @@ class ApiClient {
 
   async deleteIntegration(id: number): Promise<ApiResponse> {
     if (this.useMockMode) {
-      return this.mockRequest({ message: 'Integration deleted successfully' });
+      return { message: 'Integration deleted successfully' };
     }
 
     const response = await this.client.delete<ApiResponse>(`/api/v1/integrations/${id}`);
@@ -515,11 +509,11 @@ class ApiClient {
 
   async testIntegration(id: number): Promise<ApiResponse> {
     if (this.useMockMode) {
-      const integration = mockIntegrations.find(i => i.id === id);
-      const success = integration?.working !== false;
-      return this.mockRequest({ 
+      const integration = { id, name: 'Slack', type: 'incoming-webhook', enabled: true };
+      const success = integration.enabled !== false;
+      return { 
         message: success ? 'Integration test successful' : 'Integration test failed'
-      });
+      };
     }
 
     const response = await this.client.post<ApiResponse>(`/api/v1/integrations/${id}/test`);
@@ -545,7 +539,7 @@ class ApiClient {
           uploadedAt: new Date().toISOString()
         }
       ];
-      return this.mockRequest(mockAssets);
+      return mockAssets;
     }
 
     const response = await this.client.get<Asset[]>('/api/v1/assets');
@@ -561,7 +555,7 @@ class ApiClient {
         url: `http://localhost:3000/assets/${file.name}`,
         uploadedAt: new Date().toISOString()
       };
-      return this.mockRequest(mockAsset);
+      return mockAsset;
     }
 
     const formData = new FormData();
@@ -576,7 +570,7 @@ class ApiClient {
 
   async deleteAsset(id: number): Promise<ApiResponse> {
     if (this.useMockMode) {
-      return this.mockRequest({ message: 'Asset deleted successfully' });
+      return { message: 'Asset deleted successfully' };
     }
 
     const response = await this.client.delete<ApiResponse>(`/api/v1/assets/${id}`);
@@ -586,7 +580,16 @@ class ApiClient {
   // Dashboard
   async getDashboardStats(): Promise<DashboardStats> {
     if (this.useMockMode) {
-      return this.mockRequest(mockDashboardStats);
+      return {
+        totalUsers: 100,
+        totalKiosks: 50,
+        totalAssets: 200,
+        totalIntegrations: 10,
+        recentActivity: [
+          { id: 1, type: 'login', description: 'User John Doe logged in', timestamp: '2025-01-01T10:00:00Z' },
+          { id: 2, type: 'error', description: 'Kiosk 1 went offline', timestamp: '2025-01-02T11:00:00Z' }
+        ]
+      };
     }
 
     const response = await this.client.get<DashboardStats>('/api/v1/dashboard/stats');
@@ -595,7 +598,10 @@ class ApiClient {
 
   async getActivityLogs(): Promise<ActivityLog[]> {
     if (this.useMockMode) {
-      return this.mockRequest(mockDashboardStats.recentActivity);
+      return [
+        { id: 1, action: 'login', user: 'John Doe', timestamp: '2025-01-01T10:00:00Z', details: 'User logged in' },
+        { id: 2, action: 'logout', user: 'Jane Smith', timestamp: '2025-01-02T11:00:00Z', details: 'User logged out' }
+      ];
     }
 
     const response = await this.client.get<ActivityLog[]>('/api/v1/dashboard/activity');
@@ -605,7 +611,7 @@ class ApiClient {
   // Security Settings
   async getSecuritySettings(): Promise<any> {
     if (this.useMockMode) {
-      return this.mockRequest({
+      return {
         passwordMinLength: '8',
         passwordRequireSymbols: true,
         passwordRequireNumbers: true,
@@ -615,7 +621,7 @@ class ApiClient {
         lockoutDuration: '15',
         twoFactorRequired: false,
         auditLogging: true
-      });
+      };
     }
 
     const response = await this.client.get('/api/v1/security-settings');
@@ -624,7 +630,7 @@ class ApiClient {
 
   async updateSecuritySettings(settings: any): Promise<ApiResponse> {
     if (this.useMockMode) {
-      return this.mockRequest({ message: 'Security settings updated successfully' });
+      return { message: 'Security settings updated successfully' };
     }
 
     const response = await this.client.put<ApiResponse>('/api/v1/security-settings', settings);
@@ -634,7 +640,7 @@ class ApiClient {
   // Notification Settings
   async getNotificationSettings(): Promise<any> {
     if (this.useMockMode) {
-      return this.mockRequest({
+      return {
         emailNotifications: true,
         slackNotifications: false,
         ticketCreatedNotify: true,
@@ -643,7 +649,7 @@ class ApiClient {
         dailyReports: false,
         weeklyReports: false,
         notificationRetention: '30'
-      });
+      };
     }
 
     const response = await this.client.get('/api/v1/notification-settings');
@@ -652,7 +658,7 @@ class ApiClient {
 
   async updateNotificationSettings(settings: any): Promise<ApiResponse> {
     if (this.useMockMode) {
-      return this.mockRequest({ message: 'Notification settings updated successfully' });
+      return { message: 'Notification settings updated successfully' };
     }
 
     const response = await this.client.put<ApiResponse>('/api/v1/notification-settings', settings);
@@ -674,7 +680,7 @@ class ApiClient {
       console.error('Error getting kiosk activations:', error);
       // Fallback to mock only if API is completely unavailable
       if (this.useMockMode || !navigator.onLine) {
-        return this.mockRequest([
+        return [
           {
             id: 'activation_123',
             code: 'ABC123',
@@ -683,7 +689,7 @@ class ApiClient {
             used: false,
             createdAt: new Date().toISOString()
           }
-        ]);
+        ];
       }
       // Return empty array if API fails but we're not in mock mode
       return [];
@@ -692,7 +698,7 @@ class ApiClient {
 
   async getKioskConfig(id: string): Promise<KioskConfig> {
     if (this.useMockMode) {
-      return this.mockRequest({
+      return {
         kiosk: { 
           id, 
           active: true, 
@@ -719,7 +725,7 @@ class ApiClient {
           statusErrorMsg: 'Error',
           systems: ['Desktop', 'Laptop', 'Mobile', 'Network', 'Printer', 'Software', 'Account Access']
         }
-      });
+      };
     }
 
     const response = await this.client.get<KioskConfig>(`/api/v1/kiosk-config/${id}`);
@@ -728,7 +734,7 @@ class ApiClient {
 
   async updateKioskConfig(id: string, config: Partial<Kiosk>): Promise<ApiResponse> {
     if (this.useMockMode) {
-      return this.mockRequest({ message: 'Kiosk configuration updated successfully' });
+      return { message: 'Kiosk configuration updated successfully' };
     }
 
     const response = await this.client.put<ApiResponse>(`/api/v1/kiosk-config/${id}`, config);
@@ -738,7 +744,7 @@ class ApiClient {
   // Feedback
   async getFeedback(): Promise<any[]> {
     if (this.useMockMode) {
-      return this.mockRequest([]);
+      return [];
     }
 
     const response = await this.client.get<any[]>('/api/v1/feedback');
@@ -747,7 +753,7 @@ class ApiClient {
 
   async createFeedback(feedback: { message: string; rating?: number }): Promise<ApiResponse> {
     if (this.useMockMode) {
-      return this.mockRequest({ message: 'Feedback submitted successfully' });
+      return { message: 'Feedback submitted successfully' };
     }
 
     const response = await this.client.post<ApiResponse>('/api/v1/feedback', feedback);
@@ -757,7 +763,7 @@ class ApiClient {
   // Password Management
   async verifyPassword(password: string): Promise<{ valid: boolean }> {
     if (this.useMockMode) {
-      return this.mockRequest({ valid: true });
+      return { valid: true };
     }
 
     const response = await this.client.post<{ valid: boolean }>('/api/v1/verify-password', { password });
@@ -766,7 +772,7 @@ class ApiClient {
 
   async updateAdminPassword(currentPassword: string, newPassword: string): Promise<ApiResponse> {
     if (this.useMockMode) {
-      return this.mockRequest({ message: 'Password updated successfully' });
+      return { message: 'Password updated successfully' };
     }
 
     const response = await this.client.put<ApiResponse>('/api/v1/admin-password', {
@@ -779,7 +785,7 @@ class ApiClient {
   // Status Configuration
   async getStatusConfig(): Promise<any> {
     if (this.useMockMode) {
-      return this.mockRequest({
+      return {
         enabled: true,
         currentStatus: 'open', // Current global status
         openMessage: 'Help Desk is Open',
@@ -816,7 +822,7 @@ class ApiClient {
           timezone: 'America/New_York',
           showNextOpen: true
         }
-      });
+      };
     }
 
     const response = await this.client.get<any>('/api/v1/status-config');
@@ -825,7 +831,7 @@ class ApiClient {
 
   async updateStatusConfig(config: any): Promise<ApiResponse> {
     if (this.useMockMode) {
-      return this.mockRequest({ message: 'Status configuration updated successfully' });
+      return { message: 'Status configuration updated successfully' };
     }
 
     const response = await this.client.put<ApiResponse>('/api/v1/status-config', config);
@@ -835,14 +841,14 @@ class ApiClient {
   // Directory Configuration
   async getDirectoryConfig(): Promise<any> {
     if (this.useMockMode) {
-      return this.mockRequest({
+      return {
         enabled: false,
         provider: 'ldap',
         url: '',
         baseDN: '',
         bindDN: '',
         bindPassword: ''
-      });
+      };
     }
 
     const response = await this.client.get<any>('/api/v1/directory-config');
@@ -851,7 +857,7 @@ class ApiClient {
 
   async updateDirectoryConfig(config: any): Promise<ApiResponse> {
     if (this.useMockMode) {
-      return this.mockRequest({ message: 'Directory configuration updated successfully' });
+      return { message: 'Directory configuration updated successfully' };
     }
 
     const response = await this.client.put<ApiResponse>('/api/v1/directory-config', config);
@@ -861,7 +867,7 @@ class ApiClient {
   // SSO Configuration
   async getSSOConfig(): Promise<any> {
     if (this.useMockMode) {
-      return this.mockRequest({
+      return {
         enabled: false,
         provider: 'saml',
         saml: {
@@ -871,7 +877,7 @@ class ApiClient {
           callbackUrl: '',
           cert: ''
         }
-      });
+      };
     }
 
     const response = await this.client.get<any>('/api/v1/sso-config');
@@ -880,21 +886,30 @@ class ApiClient {
 
   async getSSOAvailability(): Promise<{ available: boolean; loginUrl?: string }> {
     if (this.useMockMode) {
-      return this.mockRequest({ available: false });
+      return { available: false };
     }
 
     const response = await this.client.get<{ available: boolean; loginUrl?: string }>('/api/v1/sso-available');
     return response.data;
   }
 
+  async updateSsoConfig(updates: any): Promise<ApiResponse> {
+    if (this.useMockMode) {
+      return { message: 'SSO configuration updated successfully' };
+    }
+
+    const response = await this.client.put<ApiResponse>('/api/v1/sso/config', updates);
+    return response.data;
+  }
+
   // SCIM Configuration
   async getSCIMConfig(): Promise<any> {
     if (this.useMockMode) {
-      return this.mockRequest({
+      return {
         enabled: false,
         token: '',
         endpoint: '/scim/v2'
-      });
+      };
     }
 
     const response = await this.client.get<any>('/api/v1/scim-config');
@@ -903,7 +918,7 @@ class ApiClient {
 
   async updateSCIMConfig(config: any): Promise<ApiResponse> {
     if (this.useMockMode) {
-      return this.mockRequest({ message: 'SCIM configuration updated successfully' });
+      return { message: 'SCIM configuration updated successfully' };
     }
 
     const response = await this.client.put<ApiResponse>('/api/v1/scim-config', config);
@@ -913,7 +928,7 @@ class ApiClient {
   // Passkey Management
   async getPasskeys(): Promise<any[]> {
     if (this.useMockMode) {
-      return this.mockRequest([
+      return [
         {
           id: '1',
           name: 'Touch ID',
@@ -921,7 +936,7 @@ class ApiClient {
           last_used: '2025-01-07T00:00:00Z',
           credential_device_type: 'platform'
         }
-      ]);
+      ];
     }
 
     const response = await this.client.get<any[]>('/api/v1/passkeys');
@@ -930,7 +945,7 @@ class ApiClient {
 
   async deletePasskey(id: string): Promise<ApiResponse> {
     if (this.useMockMode) {
-      return this.mockRequest({ message: 'Passkey deleted successfully' });
+      return { message: 'Passkey deleted successfully' };
     }
 
     const response = await this.client.delete<ApiResponse>(`/api/v1/passkeys/${id}`);
@@ -939,13 +954,13 @@ class ApiClient {
 
   async beginPasskeyRegistration(options: any): Promise<any> {
     if (this.useMockMode) {
-      return this.mockRequest({
+      return {
         challenge: 'mock-challenge',
         rp: { name: 'CueIT Portal', id: 'localhost' },
         user: { id: 'mock-user-id', name: 'mock@example.com', displayName: 'Mock User' },
         pubKeyCredParams: [{ alg: -7, type: 'public-key' }],
         timeout: 60000
-      });
+      };
     }
 
     const response = await this.client.post<any>('/api/v1/passkey/register/begin', options);
@@ -954,7 +969,7 @@ class ApiClient {
 
   async completePasskeyRegistration(data: any): Promise<ApiResponse> {
     if (this.useMockMode) {
-      return this.mockRequest({ verified: true, message: 'Passkey registered successfully' });
+      return { verified: true, message: 'Passkey registered successfully' };
     }
 
     const response = await this.client.post<ApiResponse>('/api/v1/passkey/register/complete', data);
@@ -963,13 +978,13 @@ class ApiClient {
 
   async beginPasskeyAuthentication(): Promise<any> {
     if (this.useMockMode) {
-      return this.mockRequest({
+      return {
         challenge: 'mock-auth-challenge',
         timeout: 60000,
         rpId: 'localhost',
         allowCredentials: [],
         challengeKey: 'mock-challenge-key'
-      });
+      };
     }
 
     const response = await this.client.post<any>('/api/v1/passkey/authenticate/begin');
@@ -978,11 +993,11 @@ class ApiClient {
 
   async completePasskeyAuthentication(data: any): Promise<{ verified: boolean; token?: string; user?: any }> {
     if (this.useMockMode) {
-      return this.mockRequest({
+      return {
         verified: true,
         token: 'mock-jwt-token',
         user: { id: 1, name: 'Mock User', email: 'mock@example.com' }
-      });
+      };
     }
 
     const response = await this.client.post<{ verified: boolean; token?: string; user?: any }>('/api/v1/passkey/authenticate/complete', data);

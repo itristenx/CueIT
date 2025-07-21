@@ -10,13 +10,15 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { 
   Plus, 
   ArrowLeft,
-  AlertCircle,
   CheckCircle,
   Loader2
 } from 'lucide-react';
 import Link from 'next/link';
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
+
+const PLACEHOLDER_TITLE = "Provide a concise title for the issue (e.g., Unable to access email)";
+const PLACEHOLDER_DESCRIPTION = "Provide detailed steps to reproduce the issue, including error messages or screenshots if available";
 
 export default function NewTicketPage() {
   const router = useRouter();
@@ -27,12 +29,24 @@ export default function NewTicketPage() {
     category: 'general',
     urgency: 'medium',
   });
+  const [errors, setErrors] = useState<Record<string, string>>({});
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   const createTicket = useCreateTicket();
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    
+
+    const newErrors: Record<string, string> = {};
+    if (!formData.title) newErrors.title = 'Title is required';
+    if (!formData.description) newErrors.description = 'Description is required';
+
+    if (Object.keys(newErrors).length > 0) {
+      setErrors(newErrors);
+      return;
+    }
+
+    setIsSubmitting(true);
     try {
       const result = await createTicket.mutateAsync(formData);
       if (result.success) {
@@ -40,13 +54,20 @@ export default function NewTicketPage() {
       }
     } catch (error) {
       console.error('Failed to create ticket:', error);
+      setErrors({ submit: 'Failed to create ticket. Please try again.' });
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
   const handleChange = (field: string, value: string) => {
     setFormData(prev => ({
       ...prev,
-      [field]: value
+      [field]: value,
+    }));
+    setErrors(prev => ({
+      ...prev,
+      [field]: '',
     }));
   };
 
@@ -87,12 +108,13 @@ export default function NewTicketPage() {
                 <Label htmlFor="title">Title *</Label>
                 <Input
                   id="title"
-                  placeholder="Brief description of the issue"
+                  placeholder={PLACEHOLDER_TITLE}
                   value={formData.title}
                   onChange={(e) => handleChange('title', e.target.value)}
                   required
                   className="mt-1"
                 />
+                {errors.title && <p className="mt-1 text-sm text-red-600">{errors.title}</p>}
               </div>
 
               {/* Description */}
@@ -100,13 +122,14 @@ export default function NewTicketPage() {
                 <Label htmlFor="description">Description *</Label>
                 <Textarea
                   id="description"
-                  placeholder="Detailed description of the issue, steps to reproduce, error messages, etc."
+                  placeholder={PLACEHOLDER_DESCRIPTION}
                   value={formData.description}
                   onChange={(e) => handleChange('description', e.target.value)}
                   required
                   rows={6}
                   className="mt-1"
                 />
+                {errors.description && <p className="mt-1 text-sm text-red-600">{errors.description}</p>}
               </div>
 
               {/* Priority, Category, Urgency */}
@@ -167,13 +190,10 @@ export default function NewTicketPage() {
                 </Link>
                 <Button 
                   type="submit" 
-                  disabled={createTicket.isPending || !formData.title || !formData.description}
+                  disabled={isSubmitting}
                 >
-                  {createTicket.isPending ? (
-                    <>
-                      <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                      Creating...
-                    </>
+                  {isSubmitting ? (
+                    <Loader2 className="animate-spin" />
                   ) : (
                     <>
                       <Plus className="mr-2 h-4 w-4" />
@@ -198,7 +218,7 @@ export default function NewTicketPage() {
             <ul className="space-y-2 text-sm text-muted-foreground">
               <li>• Be specific about the problem and include error messages</li>
               <li>• Include steps to reproduce the issue</li>
-              <li>• Mention which device/browser you're using</li>
+              <li>• Mention which device/browser you&apos;re using</li>
               <li>• Include screenshots if they help explain the issue</li>
               <li>• Set the priority based on how much this affects your work</li>
             </ul>

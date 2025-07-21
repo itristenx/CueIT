@@ -11,11 +11,24 @@ import {
   Calendar,
   Eye,
   ThumbsUp,
-  Filter,
   Star
 } from 'lucide-react';
 import Link from 'next/link';
 import { useState } from 'react';
+
+const SEARCH_PLACEHOLDER = "Search for help articles, guides, or troubleshooting tips (e.g., password reset, VPN setup)";
+
+interface Article {
+  id: string;
+  title: string;
+  description: string;
+  category: string;
+  tags?: string[];
+  views?: number;
+  likes?: number;
+  featured?: boolean;
+  updatedAt: string;
+}
 
 export default function KnowledgeBasePage() {
   const [search, setSearch] = useState('');
@@ -62,7 +75,7 @@ export default function KnowledgeBasePage() {
           <div className="relative">
             <Search className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
             <Input
-              placeholder="Search for articles, guides, or troubleshooting tips..."
+              placeholder={SEARCH_PLACEHOLDER}
               value={search}
               onChange={(e) => setSearch(e.target.value)}
               className="pl-10"
@@ -113,7 +126,7 @@ export default function KnowledgeBasePage() {
       {/* Articles Grid */}
       <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
         {articles?.data?.length ? (
-          articles.data.map((article: any) => (
+          articles.data.map((article: Article) => (
             <Card key={article.id} className="hover:shadow-md transition-shadow">
               <CardHeader>
                 <div className="flex items-start justify-between">
@@ -201,7 +214,7 @@ export default function KnowledgeBasePage() {
         </CardHeader>
         <CardContent>
           <div className="space-y-3">
-            {articles?.data?.slice(0, 5).map((article: any) => (
+            {articles?.data?.slice(0, 5).map((article: Article) => (
               <div key={article.id} className="flex items-center justify-between p-3 rounded-lg border hover:bg-muted/50 transition-colors">
                 <div className="flex-1">
                   <Link href={`/knowledge-base/${article.id}`}>

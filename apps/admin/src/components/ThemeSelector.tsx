@@ -1,11 +1,15 @@
 import React from 'react';
 import { SunIcon, MoonIcon, ComputerDesktopIcon } from '@heroicons/react/24/outline';
 import { useTheme } from '@/contexts/ThemeContext';
-import { Button } from '@/components/ui';
+import { Button } from '../../../../apps/nova-core/src/components/ui/button';
+import themeConfig from '../../../../packages/nova-shared/theme.json';
 
 interface ThemeSelectorProps {
   className?: string;
 }
+
+// Dynamically load colors from theme.json
+const colors = themeConfig.colors;
 
 export const ThemeSelector: React.FC<ThemeSelectorProps> = ({ className = '' }) => {
   const { mode, setTheme } = useTheme();
@@ -31,6 +35,12 @@ export const ThemeSelector: React.FC<ThemeSelectorProps> = ({ className = '' }) 
     }
   ] as const;
 
+  // Example usage of colors in the component
+  const buttonStyle = {
+    backgroundColor: colors.primary,
+    color: colors.foreground,
+  };
+
   return (
     <div className={`space-y-3 ${className}`}>
       <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">
@@ -40,10 +50,11 @@ export const ThemeSelector: React.FC<ThemeSelectorProps> = ({ className = '' }) 
         {themes.map((theme) => (
           <Button
             key={theme.value}
-            variant={mode === theme.value ? 'primary' : 'secondary'}
+            variant={mode === theme.value ? 'default' : 'secondary'}
             size="sm"
             onClick={() => setTheme(theme.value)}
             className="flex flex-col items-center p-3 h-auto"
+            style={buttonStyle}
           >
             <theme.icon className="h-5 w-5 mb-1" />
             <span className="text-xs">{theme.label}</span>

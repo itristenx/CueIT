@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
+import { apiRequest } from '../../lib/api';
 import { AdminLayout } from '@/components/layout';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -80,11 +81,7 @@ export default function NotificationsPage() {
       setLoading(true);
       setError(null);
       
-      const response = await fetch('/api/v2/notifications');
-      if (!response.ok) {
-        throw new Error('Failed to fetch notifications');
-      }
-      const result = await response.json();
+      const result = await apiRequest('/api/v2/notifications');
       setNotifications(result);
     } catch (err) {
       console.error('Notifications fetch error:', err);

@@ -1,6 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
-import { UserXP, XPTransaction } from '../../generated/prisma';
+import type { UserXP } from '../../generated/prisma';
 
 @Injectable()
 export class GamificationService {

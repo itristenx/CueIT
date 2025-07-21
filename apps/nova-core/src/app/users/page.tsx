@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
+import { apiRequest } from '../../lib/api';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -94,12 +95,8 @@ export default function UsersPage() {
   const fetchUsers = async () => {
     try {
       setLoading(true);
-      // This would call the actual API
-      const response = await fetch('/api/v2/users');
-      if (!response.ok) {
-        throw new Error('Failed to fetch users');
-      }
-      const data = await response.json();
+      // Use shared API client
+      const data = await apiRequest('/api/v2/users');
       setUsers(data.users || []);
     } catch (error) {
       console.error('Error fetching users:', error);

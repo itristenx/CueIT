@@ -5,7 +5,7 @@
   "description": "Nova Core - Admin Dashboard for configs, workflows, and users",
   "scripts": {
     "dev": "next dev --turbopack",
-    "build": "next build",
+    "build": "tsc && next build",
     "start": "next start",
     "lint": "next lint"
   },
@@ -38,9 +38,11 @@
   "devDependencies": {
     "@eslint/eslintrc": "^3",
     "@tailwindcss/postcss": "^4",
+    "@types/axios": "^0.9.36",
     "@types/node": "^20",
     "@types/react": "^19",
     "@types/react-dom": "^19",
+    "axios": "^1.10.0",
     "eslint": "^9",
     "eslint-config-next": "15.4.1",
     "tailwindcss": "^4",

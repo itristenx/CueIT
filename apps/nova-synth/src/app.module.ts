@@ -26,6 +26,10 @@ import { AdminPasswordModule } from './admin-password/admin-password.module';
 import { RequestCatalogModule } from './request-catalog/request-catalog.module';
 import { McpModule } from './mcp/mcp.module';
 import { GamificationModule } from './gamification/gamification.module';
+import { SlaModule } from './sla/sla.module';
+import { WorkflowModule } from './workflow/workflow.module';
+import { NovaAscendModule } from './nova-ascend/nova-ascend.module';
+import { NovaHelixModule } from './nova-helix/nova-helix.module';
 
 @Module({
   imports: [
@@ -56,6 +60,10 @@ import { GamificationModule } from './gamification/gamification.module';
     RequestCatalogModule,
     McpModule,
     GamificationModule,
+    SlaModule,
+    WorkflowModule,
+    NovaAscendModule,
+    NovaHelixModule,
   ],
   controllers: [AppController],
   providers: [AppService],

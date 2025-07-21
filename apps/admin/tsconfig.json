@@ -18,7 +18,9 @@
     "forceConsistentCasingInFileNames": true,
     "baseUrl": ".",
     "paths": {
-      "@/*": ["./src/*"]
+      "@/*": ["./src/*"],
+      "@nova-shared/*": ["../../packages/nova-shared/*"],
+      "@nova-core/*": ["../../apps/nova-core/src/*"]
     }
   },
   "include": ["src"],

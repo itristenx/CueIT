@@ -36,7 +36,14 @@
     "clean": "rm -rf node_modules apps/*/node_modules apps/*/.next apps/*/dist"
   },
   "devDependencies": {
-    "jest": "^30.0.4"
+    "@babel/core": "^7.28.0",
+    "@babel/preset-env": "^7.28.0",
+    "@babel/preset-react": "^7.27.1",
+    "@babel/preset-typescript": "^7.27.1",
+    "@types/jest": "^30.0.0",
+    "babel-jest": "^30.0.4",
+    "jest": "^30.0.4",
+    "ts-jest": "^29.4.0"
   },
   "dependencies": {
     "concurrently": "^9.2.0"

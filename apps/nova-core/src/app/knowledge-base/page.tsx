@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
+import { apiRequest } from '../../lib/api';
 import { AdminLayout } from '@/components/layout';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -94,11 +95,7 @@ export default function KnowledgeBasePage() {
       setLoading(true);
       setError(null);
       
-      const response = await fetch('/api/v2/knowledge-base');
-      if (!response.ok) {
-        throw new Error('Failed to fetch articles');
-      }
-      const result = await response.json();
+      const result = await apiRequest('/api/v2/knowledge-base');
       setArticles(result);
     } catch (err) {
       console.error('Articles fetch error:', err);

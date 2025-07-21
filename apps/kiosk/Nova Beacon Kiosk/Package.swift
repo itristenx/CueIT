@@ -2,21 +2,22 @@
 import PackageDescription
 
 let package = Package(
-    name: "CueIT-Kiosk",
+    name: "Nova-Beacon-Kiosk",
     platforms: [
-        .iOS(.v15)
+        .iOS(.v15),
+        .macOS(.v10_15)
     ],
     products: [
         .library(
-            name: "CueIT-Kiosk",
-            targets: ["CueIT-Kiosk"]),
+            name: "Nova-Beacon-Kiosk",
+            targets: ["Nova-Beacon-Kiosk"]),
     ],
     dependencies: [
         .package(url: "https://github.com/twostraws/CodeScanner", from: "2.3.0")
     ],
     targets: [
         .target(
-            name: "CueIT-Kiosk",
+            name: "Nova-Beacon-Kiosk",
             dependencies: [
                 .product(name: "CodeScanner", package: "CodeScanner")
             ],

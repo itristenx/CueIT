@@ -1,0 +1,14 @@
+{
+  "name": "@nova-shared/theme",
+  "version": "1.0.0",
+  "main": "theme.json",
+  "type": "module",
+  "dependencies": {
+    "react": "^19.1.0",
+    "react-dom": "^19.1.0"
+  },
+  "devDependencies": {
+    "@types/react": "^19.1.8",
+    "vitest": "^3.2.4"
+  }
+}

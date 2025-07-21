@@ -20,8 +20,9 @@ export class NovaHelixService {
     }
 
     // Verify password (implement proper password hashing)
-    // This is a simplified version
-    const isValid = await this.verifyPassword(password, user.password);
+    // Note: The current schema doesn't have password field, this is a placeholder
+    // In production, integrate with Clerk or implement proper password storage
+    const isValid = await this.verifyPassword(password, 'dummy-hash');
     
     if (!isValid) {
       throw new Error('Invalid credentials');

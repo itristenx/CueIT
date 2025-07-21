@@ -56,30 +56,3 @@ enum ConfigurationError: Error, LocalizedError {
         }
     }
 }
-
-// MARK: - Kiosk Error Types
-enum KioskError: Error, LocalizedError {
-    case initializationFailed(String)
-    case configurationLoadFailed
-    case activationFailed(String)
-    case networkConnectionLost
-    case authenticationRequired
-    case maintenanceMode
-    
-    var errorDescription: String? {
-        switch self {
-        case .initializationFailed(let message):
-            return "Initialization failed: \(message)"
-        case .configurationLoadFailed:
-            return "Failed to load configuration"
-        case .activationFailed(let message):
-            return "Activation failed: \(message)"
-        case .networkConnectionLost:
-            return "Network connection lost"
-        case .authenticationRequired:
-            return "Authentication required"
-        case .maintenanceMode:
-            return "System is in maintenance mode"
-        }
-    }
-}

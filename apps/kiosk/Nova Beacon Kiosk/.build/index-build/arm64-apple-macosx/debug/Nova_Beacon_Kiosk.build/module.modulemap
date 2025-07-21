@@ -1,0 +1,4 @@
+module Nova_Beacon_Kiosk {
+    header "/Users/tneibarger/Documents/GitHub/nova-universe/apps/kiosk/Nova Beacon Kiosk/.build/index-build/arm64-apple-macosx/debug/Nova_Beacon_Kiosk.build/Nova-Beacon-Kiosk-Swift.h"
+    requires objc
+}

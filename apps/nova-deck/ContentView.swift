@@ -1,7 +1,7 @@
 import SwiftUI
 
 struct ContentView: View {
-    @EnvironmentObject var appModel: CueITAppModel
+    @EnvironmentObject var appModel: NovaDeckAppModel
     
     var body: some View {
         if appModel.showSetup {
@@ -17,13 +17,13 @@ struct ContentView: View {
                     .environmentObject(appModel)
                     .frame(maxWidth: .infinity, maxHeight: .infinity)
             }
-            .navigationTitle("CueIT Portal")
+            .navigationTitle("Nova Portal")
         }
     }
 }
 
 struct SidebarView: View {
-    @EnvironmentObject var appModel: CueITAppModel
+    @EnvironmentObject var appModel: NovaDeckAppModel
     
     var body: some View {
         List(NavigationItem.allCases, id: \.self, selection: $appModel.selectedNavigation) { item in
@@ -31,12 +31,12 @@ struct SidebarView: View {
                 .tag(item)
         }
         .listStyle(SidebarListStyle())
-        .navigationTitle("CueIT Portal")
+        .navigationTitle("Nova Portal")
     }
 }
 
 struct MainContentView: View {
-    @EnvironmentObject var appModel: CueITAppModel
+    @EnvironmentObject var appModel: NovaDeckAppModel
     
     var body: some View {
         Group {
@@ -69,7 +69,7 @@ struct MainContentView: View {
 }
 
 struct DashboardView: View {
-    @EnvironmentObject var appModel: CueITAppModel
+    @EnvironmentObject var appModel: NovaDeckAppModel
     
     var body: some View {
         VStack(alignment: .leading, spacing: 20) {
@@ -78,16 +78,16 @@ struct DashboardView: View {
                 .fontWeight(.bold)
             
             LazyVGrid(columns: Array(repeating: GridItem(.flexible()), count: 3), spacing: 16) {
-                ServiceStatusCard(title: "API Server", 
-                                status: appModel.services.first(where: { $0.name == "CueIT API" })?.isRunning ?? false,
+                ServiceStatusCard(title: "Nova Synth API", 
+                                status: appModel.services.first(where: { $0.name == "Nova Synth" })?.isRunning ?? false,
                                 url: "http://localhost:3000")
                 
-                ServiceStatusCard(title: "Admin UI", 
-                                status: appModel.services.first(where: { $0.name == "CueIT Admin" })?.isRunning ?? false,
+                ServiceStatusCard(title: "Nova Core Admin", 
+                                status: appModel.services.first(where: { $0.name == "Nova Core" })?.isRunning ?? false,
                                 url: "http://localhost:5175")
                 
-                ServiceStatusCard(title: "Slack Bot", 
-                                status: appModel.services.first(where: { $0.name == "CueIT Slack" })?.isRunning ?? false,
+                ServiceStatusCard(title: "Nova Comms", 
+                                status: appModel.services.first(where: { $0.name == "Nova Comms" })?.isRunning ?? false,
                                 url: "http://localhost:3001")
             }
             
@@ -323,6 +323,6 @@ struct SettingsView: View {
 struct ContentView_Previews: PreviewProvider {
     static var previews: some View {
         ContentView()
-            .environmentObject(CueITAppModel())
+            .environmentObject(NovaDeckAppModel())
     }
 }

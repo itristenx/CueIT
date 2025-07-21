@@ -187,12 +187,14 @@ private func startStatusSync() {
 ### Error Types
 
 ```swift
-enum KioskError.ErrorType {
-    case networkError      // Connection issues
-    case authenticationError // Token expired/invalid
-    case configurationError // Configuration problems
-    case serverError       // Server-side errors
-    case unknown          // Unknown errors
+struct KioskError {
+    enum ErrorType: String, Codable, CaseIterable {
+        case networkError = "network"
+        case authenticationError = "authentication"
+        case configurationError = "configuration"
+        case serverError = "server"
+        case unknown = "unknown"
+    }
 }
 ```
 

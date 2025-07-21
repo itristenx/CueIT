@@ -27,6 +27,38 @@ interface FormField {
   validation?: string;
 }
 
+class FormFieldUtils {
+  static validate(field: FormField, value: string | number | boolean): boolean {
+    try {
+      if (field.required && !value) return false;
+      if (field.validation) {
+        const regex = new RegExp(field.validation);
+        return regex.test(String(value));
+      }
+      if (field.type === 'number' && typeof value !== 'number') return false;
+      if (field.type === 'string' && typeof value !== 'string') return false;
+      return true;
+    } catch (error) {
+      console.error(`Validation error for field ${field.name}:`, error);
+      return false;
+    }
+  }
+
+  static getDefaultValue(field: FormField): string | number | boolean {
+    if (field.defaultValue !== undefined) return field.defaultValue;
+    switch (field.type) {
+      case 'number':
+        return 0;
+      case 'boolean':
+        return false;
+      case 'string':
+        return '';
+      default:
+        throw new Error(`Unsupported field type: ${field.type}`);
+    }
+  }
+}
+
 interface RequestCatalogItem {
   id: string;
   name: string;
@@ -35,6 +67,20 @@ interface RequestCatalogItem {
   icon?: string;
   tags: string[];
   formFields: FormField[];
+  isActive?: boolean; // Added isActive property
+}
+
+class RequestCatalogItemUtils {
+  static isActive(item: RequestCatalogItem): boolean {
+    return item.isActive !== false;
+  }
+
+  static getTagList(item: RequestCatalogItem): string {
+    if (!item.tags || item.tags.length === 0) {
+      return 'No tags available'; // Consider replacing with a localized message.
+    }
+    return item.tags.join(', ');
+  }
 }
 
 interface RequestFormProps {
@@ -43,12 +89,17 @@ interface RequestFormProps {
   }>;
 }
 
+interface RequestPayload {
+  formData: Record<string, string>;
+  [key: string]: string | number | boolean | Record<string, string>;
+}
+
 export default function RequestFormPage({ params }: RequestFormProps) {
   const { id } = use(params);
   const router = useRouter();
   const queryClient = useQueryClient();
   
-  const [formData, setFormData] = useState<Record<string, any>>({});
+  const [formData, setFormData] = useState<Record<string, string | number | boolean>>({});
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [urgency, setUrgency] = useState('medium');
   const [justification, setJustification] = useState('');
@@ -62,7 +113,7 @@ export default function RequestFormPage({ params }: RequestFormProps) {
   });
 
   const createRequestMutation = useMutation({
-    mutationFn: async (data: any) => {
+    mutationFn: async (data: RequestPayload) => {
       const response = await apiClient.post('/api/v2/request-catalog/requests', data);
       return response.data.data;
     },
@@ -70,15 +121,15 @@ export default function RequestFormPage({ params }: RequestFormProps) {
       queryClient.invalidateQueries({ queryKey: ['catalog-stats'] });
       router.push(`/tickets/${data.id}`);
     },
-    onError: (error: any) => {
+    onError: (error: unknown) => {
       console.error('Failed to create request:', error);
     },
   });
 
-  const handleInputChange = (name: string, value: any) => {
+  const handleInputChange = (name: string, value: string | number | boolean) => {
     setFormData(prev => ({
       ...prev,
-      [name]: value
+      [name]: value,
     }));
     
     // Clear error when user starts typing
@@ -90,47 +141,17 @@ export default function RequestFormPage({ params }: RequestFormProps) {
     }
   };
 
+  // Example usage of FormFieldUtils for validation
   const validateForm = () => {
-    const newErrors: Record<string, string> = {};
-
-    if (!catalogItem) return false;
-
-    // Generate a title if not provided
-    if (!formData.title) {
-      formData.title = `${catalogItem.name} Request`;
-    }
-
-    // Validate required fields
-    catalogItem.formFields.forEach(field => {
-      if (field.required && (!formData[field.name] || formData[field.name] === '')) {
-        newErrors[field.name] = `${field.label} is required`;
-      }
-
-      // Additional validation based on field type
-      if (formData[field.name] && field.type === 'email') {
-        const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-        if (!emailRegex.test(formData[field.name])) {
-          newErrors[field.name] = `${field.label} must be a valid email address`;
-        }
-      }
-
-      if (formData[field.name] && field.type === 'url') {
-        try {
-          new URL(formData[field.name]);
-        } catch {
-          newErrors[field.name] = `${field.label} must be a valid URL`;
-        }
-      }
-
-      if (formData[field.name] && field.type === 'number') {
-        if (isNaN(Number(formData[field.name]))) {
-          newErrors[field.name] = `${field.label} must be a number`;
-        }
+    const errors: Record<string, string> = {};
+    catalogItem?.formFields.forEach(field => {
+      const value = formData[field.name];
+      if (!FormFieldUtils.validate(field, value)) {
+        errors[field.name] = `${field.label} is invalid.`;
       }
     });
-
-    setErrors(newErrors);
-    return Object.keys(newErrors).length === 0;
+    setErrors(errors);
+    return Object.keys(errors).length === 0;
   };
 
   const handleSubmit = (e: React.FormEvent) => {
@@ -143,18 +164,23 @@ export default function RequestFormPage({ params }: RequestFormProps) {
     const title = formData.title || `${catalogItem?.name} Request`;
     const description = formData.description || `Service request for ${catalogItem?.name}`;
 
+    const serializedFormData = Object.entries(formData).reduce((acc, [key, value]) => {
+      acc[key] = String(value);
+      return acc;
+    }, {} as Record<string, string>);
+
     createRequestMutation.mutate({
       catalogItemId: id,
       title,
       description,
-      formData,
+      formData: serializedFormData,
       urgency,
       justification,
     });
   };
 
   const renderFormField = (field: FormField) => {
-    const value = formData[field.name] || field.defaultValue || '';
+    const value = String(formData[field.name] || field.defaultValue || '');
     const hasError = !!errors[field.name];
 
     switch (field.type) {
@@ -167,14 +193,19 @@ export default function RequestFormPage({ params }: RequestFormProps) {
               {field.label}
               {field.required && <span className="text-red-500">*</span>}
             </Label>
-            <Input
-              id={field.name}
-              type={field.type}
-              placeholder={field.placeholder}
-              value={value}
-              onChange={(e) => handleInputChange(field.name, e.target.value)}
-              className={hasError ? 'border-red-500' : ''}
-            />
+            <label htmlFor={field.name}>
+              {field.label}
+              <Input
+                id={field.name}
+                type={field.type}
+                title={field.label}
+                placeholder={field.placeholder || `Enter ${field.label.toLowerCase()}`}
+                value={String(value)}
+                onChange={(e) => handleInputChange(field.name, e.target.value)}
+                aria-label={field.label}
+                className={hasError ? 'border-red-500' : ''}
+              />
+            </label>
             {field.description && (
               <p className="text-sm text-gray-600">{field.description}</p>
             )}
@@ -191,14 +222,19 @@ export default function RequestFormPage({ params }: RequestFormProps) {
               {field.label}
               {field.required && <span className="text-red-500">*</span>}
             </Label>
-            <Input
-              id={field.name}
-              type="number"
-              placeholder={field.placeholder}
-              value={value}
-              onChange={(e) => handleInputChange(field.name, e.target.value)}
-              className={hasError ? 'border-red-500' : ''}
-            />
+            <label htmlFor={field.name}>
+              {field.label}
+              <Input
+                id={field.name}
+                type="number"
+                title={field.label}
+                placeholder={field.placeholder}
+                value={String(value)}
+                onChange={(e) => handleInputChange(field.name, e.target.value)}
+                aria-label={field.label}
+                className={hasError ? 'border-red-500' : ''}
+              />
+            </label>
             {field.description && (
               <p className="text-sm text-gray-600">{field.description}</p>
             )}
@@ -217,9 +253,11 @@ export default function RequestFormPage({ params }: RequestFormProps) {
             </Label>
             <Textarea
               id={field.name}
+              title={field.label}
               placeholder={field.placeholder}
-              value={value}
+              value={String(value)}
               onChange={(e) => handleInputChange(field.name, e.target.value)}
+              aria-label={field.label}
               className={hasError ? 'border-red-500' : ''}
               rows={3}
             />
@@ -241,7 +279,7 @@ export default function RequestFormPage({ params }: RequestFormProps) {
               {field.required && <span className="text-red-500">*</span>}
             </Label>
             <Select
-              value={value}
+              value={String(value)}
               onValueChange={(value) => handleInputChange(field.name, value)}
             >
               <SelectTrigger className={hasError ? 'border-red-500' : ''}>
@@ -271,7 +309,7 @@ export default function RequestFormPage({ params }: RequestFormProps) {
               <input
                 id={field.name}
                 type="checkbox"
-                checked={value}
+                checked={Boolean(value)}
                 onChange={(e) => handleInputChange(field.name, e.target.checked)}
                 className="rounded border-gray-300 text-blue-600 focus:ring-blue-500"
                 aria-describedby={field.description ? `${field.name}-desc` : undefined}
@@ -300,8 +338,9 @@ export default function RequestFormPage({ params }: RequestFormProps) {
             <Input
               id={field.name}
               type="date"
-              value={value}
+              value={String(value)}
               onChange={(e) => handleInputChange(field.name, e.target.value)}
+              aria-label={field.label}
               className={hasError ? 'border-red-500' : ''}
             />
             {field.description && (
@@ -352,6 +391,10 @@ export default function RequestFormPage({ params }: RequestFormProps) {
     );
   }
 
+  // Example usage of RequestCatalogItemUtils
+  const isActive = RequestCatalogItemUtils.isActive(catalogItem);
+  const tagList = RequestCatalogItemUtils.getTagList(catalogItem);
+
   return (
     <div className="container mx-auto px-4 py-8">
       <div className="max-w-2xl mx-auto">
@@ -385,6 +428,14 @@ export default function RequestFormPage({ params }: RequestFormProps) {
                 </div>
               </div>
             </CardHeader>
+            <div className="mb-4">
+              <Badge variant={isActive ? 'default' : 'destructive'}>
+                {isActive ? 'Active' : 'Inactive'}
+              </Badge>
+            </div>
+            <div className="mb-4">
+              <p className="text-sm text-gray-600">Tags: {tagList}</p>
+            </div>
           </Card>
         </div>
 
@@ -418,6 +469,7 @@ export default function RequestFormPage({ params }: RequestFormProps) {
                   <Label htmlFor="justification">Business Justification</Label>
                   <Textarea
                     id="justification"
+                    title="Business Justification"
                     placeholder="Please provide a brief justification for this request..."
                     value={justification}
                     onChange={(e) => setJustification(e.target.value)}
@@ -461,3 +513,5 @@ export default function RequestFormPage({ params }: RequestFormProps) {
     </div>
   );
 }
+
+export { FormFieldUtils, RequestCatalogItemUtils };

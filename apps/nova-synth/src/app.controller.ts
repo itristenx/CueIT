@@ -12,8 +12,13 @@ export class AppController {
   ) {}
 
   @Get()
-  getHello(): string {
-    return this.appService.getHello();
+  getRoot(): object {
+    return { status: 'API Running' };
+  }
+
+  @Get('health')
+  getHealth(): object {
+    return { status: 'running' };
   }
 
   // V1 Legacy endpoints for backward compatibility
