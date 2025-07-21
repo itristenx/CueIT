@@ -46,7 +46,7 @@ cd QueueIT
 QueueIT is a comprehensive IT help desk system with multiple components:
 
 ### Core Components
-- **packages/api** - Backend API server (Node.js/Express/SQLite)
+- **apps/api-nest** - Modern backend API server (NestJS/PostgreSQL/Prisma)
 - **apps/admin** - Web admin interface (React/TypeScript/Vite)
 - **apps/kiosk** - iOS kiosk application (Swift/SwiftUI)
 - **apps/slack** - Slack integration service
@@ -62,15 +62,17 @@ QueueIT is a comprehensive IT help desk system with multiple components:
 
 ## Components
 
-### packages/api
-Express.js backend with SQLite database. Handles ticket submission, user management, kiosk activation, and integrations.
+### apps/api-nest
+NestJS backend with PostgreSQL database. Handles ticket submission, user management, kiosk activation, and integrations.
 
 **Key Features:**
-- REST API for all operations
-- SQLite database with automatic migrations
+- REST API v2 for all operations
+- PostgreSQL database with Prisma ORM
 - Comprehensive security middleware
-- Rate limiting and input validation
+- Rate limiting and spam filtering
 - Integration with HelpScout, ServiceNow, and Slack
+- Advanced RBAC with 9 user roles
+- SCIM 2.0 and SSO/SAML support
 
 ### apps/admin
 React admin interface for managing the help desk system.
@@ -108,7 +110,7 @@ Native macOS launcher application.
         └────────────────────┼────────────────────┘
                              │
                 ┌────────────▼─────────────┐
-                │      packages/api        │
+                │      apps/api-nest       │
                 │   (Express + SQLite)    │
                 └─────────────────────────┘
 ```
@@ -123,7 +125,7 @@ Native macOS launcher application.
 ### Manual Setup
 ```bash
 # Install dependencies for each component
-cd packages/api && npm ci
+cd apps/api-nest && npm ci
 cd ../apps/admin && npm ci
 cd ../apps/slack && npm ci
 
@@ -131,7 +133,7 @@ cd ../apps/slack && npm ci
 ./scripts/init-env.sh
 
 # Start services individually
-cd packages/api && npm start &
+cd apps/api-nest && npm start &
 cd ../apps/admin && npm run dev &
 cd ../apps/slack && npm start &
 ```
@@ -139,7 +141,7 @@ cd ../apps/slack && npm start &
 ### Environment Configuration
 Edit the `.env` files in each component directory:
 
-#### packages/api/.env
+#### apps/api-nest/.env
 ```
 API_PORT=3000
 SESSION_SECRET=your-secure-secret
@@ -208,7 +210,7 @@ Set your frontend `.env` files to use the versioned API URL:
 VITE_API_URL=http://localhost:3000/api/v1
 ```
 
-See [packages/api/README.md](packages/api/README.md#api-versioning) and [docs/quickstart.md](docs/quickstart.md) for more details and request/response examples.
+See [apps/api-nest/README.md](apps/api-nest/README.md#api-versioning) and [docs/quickstart.md](docs/quickstart.md) for more details and request/response examples.
 
 # End of API Versioning and Config Management Section
 
@@ -244,7 +246,7 @@ See [SECURITY_FIXES.md](SECURITY_FIXES.md) for detailed security implementation.
 ### Testing
 ```bash
 # Run tests for each component
-cd packages/api && npm test
+cd apps/api-nest && npm test
 cd ../apps/admin && npm test
 cd ../apps/slack && npm test
 ```
@@ -267,7 +269,7 @@ cd apps/kiosk && ./clean-build.sh
 1. Build all components:
    ```bash
    cd apps/admin && npm run build
-   cd packages/api && npm run build # if applicable
+   cd apps/api-nest && npm run build # if applicable
    ```
 
 2. Configure production environment variables
@@ -297,8 +299,8 @@ cd apps/kiosk && ./clean-build.sh
 
 #### Authentication Problems
 1. Check session secret is set
-2. Verify admin user exists: `cd packages/api && node cli.js list`
-3. Reset admin password: `cd packages/api && node cli.js update-password`
+2. Verify admin user exists: `cd apps/api-nest && npx prisma db seed`
+3. Reset admin password: `cd apps/api-nest && npx prisma studio`
 
 ### Log Locations
 - API logs: Check console output or configured log file
@@ -318,7 +320,7 @@ cd apps/kiosk && ./clean-build.sh
 - See [development guide](development.md) for contributing
 
 ## Component Documentation
-- [API Documentation](packages/api/README.md)
+- [API Documentation](apps/api-nest/README.md)
 - [Admin UI Documentation](apps/admin/README.md)
 - [iOS Kiosk Documentation](apps/kiosk/README.md)
 - [Slack Integration](apps/slack/README.md)

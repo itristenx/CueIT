@@ -1,10 +1,17 @@
-# QueueIT - Modern ITSM Platform
+# 🌌 Nova Universe - Modern ITSM Platform
 
-A modern, enterprise-grade IT Service Management platform built with Next.js 15, NestJS, and PostgreSQL.
+A modern, enterprise-grade IT Service Management platform suite built with Next.js 15, NestJS, and PostgreSQL. Welcome to the Nova Universe - where support scales and style lands.
+
+> **"Support that scales. Style that lands."**
 
 ## 🚀 Quick Start
 
-### Prerequisites
+### 🔵 Phase 4: Enterprise Features (Planned)
+- SCIM + SSO integration
+- Multi-tenant support
+- Advanced security features
+- CLI tools for server management
+- Nova Ascend full gamification systemrerequisites
 - Node.js 20+
 - Docker & Docker Compose
 - PostgreSQL (if running locally)
@@ -14,16 +21,16 @@ A modern, enterprise-grade IT Service Management platform built with Next.js 15,
 1. **Clone and install dependencies**
 ```bash
 git clone <repository-url>
-cd QueueIT
+cd nova-universe
 npm run install:all
 ```
 
 2. **Set up environment variables**
 ```bash
 # Copy environment files
-cp apps/api-nest/.env.example apps/api-nest/.env
-cp apps/portal/.env.local.example apps/portal/.env.local
-cp apps/admin-next/.env.local.example apps/admin-next/.env.local
+cp apps/nova-synth/.env.example apps/nova-synth/.env
+cp apps/nova-orbit/.env.local.example apps/nova-orbit/.env.local
+cp apps/nova-core/.env.local.example apps/nova-core/.env.local
 ```
 
 3. **Start with Docker (Recommended)**
@@ -42,10 +49,12 @@ npm run dev
 ```
 
 ### Access Points
-- **Portal**: http://localhost:3000
-- **Admin**: http://localhost:3002
-- **API**: http://localhost:3001
-- **Database**: postgresql://localhost:5432/queueit_db
+- **Nova Orbit (Portal)**: http://localhost:3000
+- **Nova Core (Admin)**: http://localhost:3002
+- **Nova Synth (API)**: http://localhost:3001
+- **Nova Pulse (Technician)**: http://localhost:3003
+- **Nova Lore (Knowledge Base)**: http://localhost:3004
+- **Database**: postgresql://localhost:5432/nova_db
 
 ## 🏗️ Architecture
 
@@ -53,39 +62,68 @@ npm run dev
 - **Frontend**: Next.js 15 with App Router, React 19, TypeScript
 - **Backend**: NestJS with Prisma ORM, PostgreSQL
 - **Authentication**: Clerk (modern auth with RBAC)
-- **UI**: Tailwind CSS + shadcn/ui components
+- **UI**: Tailwind CSS + shadcn/ui components + Nova Design System
+- **AI**: Cosmo Assistant powered by Nova Synth
 - **Deployment**: Docker + Docker Compose
 
-### Applications
+### Nova Modules
 ```
 ├── apps/
-│   ├── portal/          # Next.js 15 - End-user portal
-│   ├── admin-next/      # Next.js 15 - Admin interface
-│   ├── api-nest/        # NestJS - Backend API
-│   ├── admin/           # Legacy - React admin (being phased out)
-│   ├── kiosk/           # iOS - Kiosk application
-│   ├── macos/           # macOS - Desktop application
-│   └── slack/           # Slack - Integration bot
+│   ├── nova-orbit/       # Next.js 15 - End User Portal for requests, chat, KB
+│   ├── nova-core/        # Next.js 15 - Admin Dashboard: configs, workflows, users
+│   ├── nova-synth/       # NestJS - AI core backend for Cosmo assistant & API
+│   ├── nova-pulse/       # Next.js 15 - Technician workspace for ticket resolution
+│   ├── nova-lore/        # Next.js 15 - Knowledge base with AI-powered suggestions
+│   ├── nova-comms/       # Node.js - Slack App: slash commands, Cosmo assistant
+│   ├── nova-deck/        # Swift - Cross-platform native app (macOS/iOS/iPadOS)
+│   ├── kiosk/           # iOS - Nova Beacon kiosk application
+│   └── admin/           # React - Legacy admin interface (being phased out)
 ├── packages/
-│   ├── api/             # Legacy - Express API (being phased out)
 │   └── scripts/         # Build and deployment scripts
-└── docs/                # Documentation
+└── docs/               # Documentation
 ```
+
+### 🧩 Nova Modules Overview
+
+| Module Name     | Codename     | Description                                   |
+|-----------------|--------------|-----------------------------------------------|
+| Nova Orbit      | `orbit`      | End User Portal for requests, chat, KB        |
+| Nova Core       | `core`       | Admin Dashboard: configs, workflows, users    |
+| Nova Synth (AI) | `synth`      | AI core backend for Cosmo assistant           |
+| Nova Pulse      | `pulse`      | Technician workspace for ticket resolution    |
+| Nova Lore       | `lore`       | Knowledge base with AI-powered suggestions    |
+| Nova Comms      | `comms`      | Slack App: slash commands, Cosmo assistant    |
+| Nova Deck       | `deck`       | Cross-platform native app (macOS/iOS/iPadOS) |
+| Nova Beacon     | `beacon`     | Kiosk App: walk-up tickets, feedback, display |
+
+### 🧠 Cosmo - Nova AI Assistant
+
+> *"Hey, I'm Cosmo. Need a hand?"*
+
+Cosmo is powered by Nova Synth and provides intelligent assistance across all modules with features like:
+- Autocomplete in request forms
+- Ticket update explanations
+- Knowledge base article suggestions
+- Gamification callouts and XP tracking
 
 ## 🔧 Development Commands
 
 ```bash
 # Development
-npm run dev                 # Start all services
-npm run dev:api            # Start API only
-npm run dev:portal         # Start portal only
-npm run dev:admin          # Start admin only
+npm run dev                 # Start all Nova services
+npm run dev:api            # Start Nova Synth API only
+npm run dev:orbit          # Start Nova Orbit portal only
+npm run dev:core           # Start Nova Core admin only
+npm run dev:pulse          # Start Nova Pulse technician workspace only
+npm run dev:lore           # Start Nova Lore knowledge base only
 
 # Building
-npm run build              # Build all applications
-npm run build:api          # Build API only
-npm run build:portal       # Build portal only
-npm run build:admin        # Build admin only
+npm run build              # Build all Nova applications
+npm run build:api          # Build Nova Synth API only
+npm run build:orbit        # Build Nova Orbit portal only
+npm run build:core         # Build Nova Core admin only
+npm run build:pulse        # Build Nova Pulse technician workspace only
+npm run build:lore         # Build Nova Lore knowledge base only
 
 # Database
 npm run db:migrate         # Run migrations
@@ -114,12 +152,13 @@ npm run clean             # Clean all build artifacts
 - **Workflows**: Automated ticket routing and escalation
 
 ### Modern Features
-- **AI Integration**: Auto-tagging, article suggestions, chatbot
+- **Cosmo AI Integration**: Auto-tagging, article suggestions, intelligent chatbot
 - **Real-time Updates**: Live ticket status and notifications
 - **Mobile-First**: Responsive design for all devices
 - **Enterprise Auth**: SSO, SCIM, multi-tenant support
 - **Advanced Reporting**: Analytics and performance metrics
 - **API-First**: RESTful API with OpenAPI documentation
+- **Nova Ascend Gamification**: XP system (Stardust), badges, and rankings
 
 ## 🔐 Authentication & Authorization
 
@@ -128,11 +167,12 @@ npm run clean             # Clean all build artifacts
 - Role-based access control (RBAC)
 - SSO and SCIM provisioning
 - Session management and security
+- Nova ID integration for gamification tracking
 
 ### User Roles
-- **end_user**: Submit/view own tickets, public KB
+- **end_user**: Submit/view own tickets, public KB, earn Stardust
 - **manager**: View team tickets, same rights as end_user
-- **technician**: Assigned tickets, comments, SLA tools
+- **technician**: Assigned tickets, comments, SLA tools, earn resolution XP
 - **tech_lead**: Full ticket access, assign, manage techs
 - **admin**: System-wide control
 - **hr_admin**: HR tickets only, KB controls
@@ -163,6 +203,14 @@ GET    /api/v2/knowledge-base    # List KB articles
 POST   /api/v2/knowledge-base    # Create article
 GET    /api/v2/knowledge-base/:id # Get article
 PATCH  /api/v2/knowledge-base/:id # Update article
+
+# Cosmo AI endpoints
+POST   /api/v2/cosmo/assist      # Get AI assistance
+POST   /api/v2/cosmo/suggest     # Get article suggestions
+
+# Gamification endpoints
+GET    /api/v2/gamification/leaderboard # Get XP leaderboard
+POST   /api/v2/gamification/award      # Award Stardust XP
 ```
 
 ### Enhanced v2 Response Format
@@ -189,15 +237,15 @@ PATCH  /api/v2/knowledge-base/:id # Update article
 
 ## 🐳 Docker Deployment
 
-The application is fully containerized with Docker Compose:
+The Nova Universe is fully containerized with Docker Compose:
 
 ```yaml
 # docker-compose.yml includes:
 - postgres    # Database
 - redis       # Cache/sessions
-- api         # NestJS backend
-- portal      # Next.js portal
-- admin       # Next.js admin
+- nova-synth  # NestJS backend + Cosmo AI
+- nova-orbit  # Next.js portal
+- nova-core   # Next.js admin
 ```
 
 ### Production Deployment
@@ -215,14 +263,14 @@ docker-compose -f docker-compose.prod.yml up -d
 # Run all tests
 npm test
 
-# Run API tests
-cd apps/api-nest && npm test
+# Run Nova Synth API tests
+cd apps/nova-synth && npm test
 
-# Run portal tests
-cd apps/portal && npm test
+# Run Nova Orbit portal tests
+cd apps/nova-orbit && npm test
 
-# Run admin tests
-cd apps/admin-next && npm test
+# Run Nova Core admin tests
+cd apps/nova-core && npm test
 ```
 
 ## 📚 Documentation
@@ -277,9 +325,9 @@ MIT License - see [LICENSE](LICENSE) file for details.
 
 For questions or issues:
 - Create an issue on GitHub
-- Contact: support@queueit.com
+- Contact: support@nova-universe.com
 - Documentation: [docs/](docs/)
 
 ---
 
-**Built with ❤️ using modern web technologies**
+**Built with ❤️ in the Nova Universe - where support scales and style lands** 🌌

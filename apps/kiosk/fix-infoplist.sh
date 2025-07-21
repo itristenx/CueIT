@@ -1,11 +1,11 @@
 #!/bin/bash
 
-# CueIT Kiosk - Fix Info.plist Build Issue
+# Nova Beacon Kiosk - Fix Info.plist Build Issue
 # This script fixes the Xcode project to resolve the Info.plist conflict
 
-echo "🔧 Fixing CueIT Kiosk Info.plist build issue..."
+echo "🔧 Fixing Nova Beacon Kiosk Info.plist build issue..."
 
-PROJECT_FILE="/Users/tneibarger/CueIT/cueit-kiosk/CueIT Kiosk/CueIT Kiosk.xcodeproj/project.pbxproj"
+PROJECT_FILE="/Users/tneibarger/Documents/GitHub/nova-universe/apps/kiosk/Nova Beacon Kiosk/Nova Beacon Kiosk.xcodeproj/project.pbxproj"
 
 # Create backup
 cp "$PROJECT_FILE" "$PROJECT_FILE.backup"
@@ -19,7 +19,7 @@ sed -i '' 's/GENERATE_INFOPLIST_FILE = YES;/GENERATE_INFOPLIST_FILE = NO;/g' "$P
 if ! grep -q "INFOPLIST_FILE" "$PROJECT_FILE"; then
     # Insert INFOPLIST_FILE setting after GENERATE_INFOPLIST_FILE lines
     sed -i '' '/GENERATE_INFOPLIST_FILE = NO;/a\
-				INFOPLIST_FILE = "CueIT Kiosk/Info.plist";
+				INFOPLIST_FILE = "Nova Beacon Kiosk/Info.plist";
 ' "$PROJECT_FILE"
 fi
 
@@ -29,7 +29,7 @@ echo "   - Set INFOPLIST_FILE to manual file"
 
 # Clean derived data
 echo "🧹 Cleaning derived data..."
-rm -rf ~/Library/Developer/Xcode/DerivedData/CueIT*
+rm -rf ~/Library/Developer/Xcode/DerivedData/Nova*
 
 echo "✅ Fix complete! You can now build the project successfully."
 echo ""

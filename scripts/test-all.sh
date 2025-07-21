@@ -1,11 +1,11 @@
 #!/bin/bash
 
-# QueueIT Platform Testing Script
+# Nova Universe Platform Testing Script
 # Comprehensive testing for all applications
 
 set -e
 
-echo "🧪 Starting QueueIT Platform Test Suite..."
+echo "🧪 Starting Nova Universe Platform Test Suite..."
 
 # Colors for output
 RED='\033[0;31m'
@@ -225,7 +225,7 @@ echo "⏭️  Tests Skipped: $TESTS_SKIPPED"
 echo ""
 
 if [ $TESTS_FAILED -eq 0 ]; then
-    echo "🎉 All tests passed! QueueIT platform is ready for deployment."
+    echo "🎉 All tests passed! Nova Universe platform is ready for deployment."
     exit 0
 else
     echo "❌ Some tests failed. Please review the issues above before deploying."

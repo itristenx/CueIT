@@ -836,7 +836,7 @@ export const KiosksPage: React.FC = () => {
                       id="welcome-message"
                       className="w-full px-3 py-2 border border-gray-300 rounded-md text-sm"
                       rows={3}
-                      defaultValue="Welcome to CueIT! How can we help you today?"
+                      defaultValue="Welcome to Nova Universe! How can we help you today?"
                       title="Welcome message displayed on kiosk"
                     />
                   </div>

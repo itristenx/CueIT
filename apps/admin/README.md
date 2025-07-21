@@ -1,6 +1,8 @@
-# QueueIT Portal
+# Nova Admin (Legacy)
 
-Modern, enterprise-grade admin interface for managing QueueIT kiosks, users, and support tickets.
+⚠️ **This is a legacy application being phased out. Please use Nova Core for new development.**
+
+Modern, enterprise-grade admin interface for managing Nova Universe kiosks, users, and support tickets.
 
 ## Features
 
@@ -14,6 +16,10 @@ Modern, enterprise-grade admin interface for managing QueueIT kiosks, users, and
   - Analytics and reporting
   - System notifications
   - Configurable settings and branding
+
+## Migration Notice
+
+This legacy admin interface is being replaced by **Nova Core**. New features should be developed in Nova Core. This application is maintained for backward compatibility only.
 
 ## Technology Stack
 
@@ -33,13 +39,13 @@ Modern, enterprise-grade admin interface for managing QueueIT kiosks, users, and
 
 - Node.js 18+
 - npm or yarn
-- QueueIT API server running
+- Nova Synth API server running
 
 ### Installation
 
 1. Clone the repository and navigate to the admin directory:
    ```bash
-   cd queueit-admin
+   cd nova-admin
    ```
 
 2. Install dependencies:
@@ -121,7 +127,7 @@ src/
 
 ## API Integration
 
-The admin interface communicates with the QueueIT API server through a centralized API client (`src/lib/api.ts`) that handles:
+The admin interface communicates with the Nova Synth API server through a centralized API client (`src/lib/api.ts`) that handles:
 
 - Authentication with JWT tokens
 - Request/response interceptors
@@ -135,7 +141,7 @@ The admin interface communicates with the QueueIT API server through a centraliz
 - Protected routes
 - Role-based access control
 
-# QueueIT Admin UI Configuration
+# Nova Admin UI Configuration (Legacy)
 
 ## API Endpoints
 - All admin UI API calls use `/api/v1` endpoints.
@@ -149,7 +155,7 @@ The admin interface communicates with the QueueIT API server through a centraliz
 - Directory: `/api/v1/directory-config`
 
 ## Environment Variables
-- `VITE_QUEUEIT_API_URL` — Set to API base URL (e.g., `http://localhost:3000/api/v1`)
+- `VITE_NOVA_API_URL` — Set to API base URL (e.g., `http://localhost:3001/api/v2`)
 
 ## Security
 - All config endpoints require authentication.
@@ -160,7 +166,7 @@ The admin interface communicates with the QueueIT API server through a centraliz
 - UI forms map to new config endpoints and use the new variable name.
 
 ## Example Usage
-Update all code references from `VITE_API_URL` to `VITE_QUEUEIT_API_URL`.
+Update all code references from `VITE_API_URL` to `VITE_NOVA_API_URL`.
 See API documentation for request/response examples.
 # End of Admin UI Configuration Section
 
@@ -175,7 +181,7 @@ See API documentation for request/response examples.
 
 ## Environment Variables
 
-- `VITE_API_URL`: URL of the QueueIT API server
+- `VITE_API_URL`: URL of the Nova Synth API server
 
 ## Browser Support
 
@@ -186,4 +192,4 @@ See API documentation for request/response examples.
 
 ## License
 
-This project is part of the QueueIT system and follows the same licensing terms.
+This project is part of the Nova Universe system and follows the same licensing terms.

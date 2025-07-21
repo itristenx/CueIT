@@ -19,7 +19,7 @@ export const AnalyticsPage: React.FC = () => {
           <ChartBarIcon className="mx-auto h-12 w-12 text-gray-400" />
           <h3 className="mt-2 text-sm font-medium text-gray-900">Analytics Dashboard</h3>
           <p className="mt-1 text-sm text-gray-500">
-            Comprehensive analytics and reporting capabilities are available for your CueIT deployment.
+            Comprehensive analytics and reporting capabilities are available for your Nova Universe deployment.
           </p>
           <div className="mt-4 space-y-2">
             <p className="text-sm text-gray-600">
@@ -37,7 +37,7 @@ export const AnalyticsPage: React.FC = () => {
           </div>
           <div className="mt-6 p-4 bg-blue-50 border border-blue-200 rounded-lg">
             <p className="text-sm text-blue-800">
-              <strong>Enterprise Feature:</strong> Advanced analytics capabilities are included with CueIT Enterprise licenses. 
+              <strong>Enterprise Feature:</strong> Advanced analytics capabilities are included with Nova Universe Enterprise licenses. 
               Contact your administrator or sales representative for access to detailed reporting and analytics features.
             </p>
           </div>

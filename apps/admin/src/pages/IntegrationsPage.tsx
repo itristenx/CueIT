@@ -319,7 +319,7 @@ export const IntegrationsPage: React.FC = () => {
                 ...formData,
                 config: { ...formData.config, username: e.target.value }
               })}
-              placeholder="CueIT Bot"
+              placeholder="Nova Bot"
             />
           </div>
         );

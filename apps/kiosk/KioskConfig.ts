@@ -1,6 +1,6 @@
 /**
  * KioskConfig.ts
- * QueueIT Kiosk Configuration Schema
+ * Nova Beacon Configuration Schema
  * 
  * TypeScript definitions for kiosk configuration and remote management
  */
@@ -397,7 +397,7 @@ export function createDefaultUIConfig(): KioskUIConfig {
       accentColor: '#34C759'
     },
     branding: {
-      organizationName: 'QueueIT'
+      organizationName: 'Nova Universe'
     },
     layout: {
       headerHeight: 80,

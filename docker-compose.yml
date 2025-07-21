@@ -3,15 +3,15 @@ services:
   postgres:
     image: postgres:16
     environment:
-      POSTGRES_DB: cueit_db
-      POSTGRES_USER: cueit_user
-      POSTGRES_PASSWORD: cueit_password
+      POSTGRES_DB: nova_db
+      POSTGRES_USER: nova_user
+      POSTGRES_PASSWORD: nova_password
     ports:
       - "5432:5432"
     volumes:
       - postgres_data:/var/lib/postgresql/data
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U cueit_user -d cueit_db"]
+      test: ["CMD-SHELL", "pg_isready -U nova_user -d nova_db"]
       interval: 10s
       timeout: 5s
       retries: 5
@@ -24,14 +24,14 @@ services:
     volumes:
       - redis_data:/data
 
-  # API Server
-  api:
+  # Nova Synth - API Server & Cosmo AI
+  nova-synth:
     build:
-      context: ./apps/api-nest
+      context: ./apps/nova-synth
       dockerfile: Dockerfile
     environment:
       - NODE_ENV=development
-      - DATABASE_URL=postgresql://cueit_user:cueit_password@postgres:5432/cueit_db?schema=public
+      - DATABASE_URL=postgresql://nova_user:nova_password@postgres:5432/nova_db?schema=public
       - PORT=3001
     ports:
       - "3001:3001"
@@ -41,13 +41,13 @@ services:
       redis:
         condition: service_started
     volumes:
-      - ./apps/api-nest:/app
+      - ./apps/nova-synth:/app
       - /app/node_modules
 
-  # Portal App
-  portal:
+  # Nova Orbit - Portal App
+  nova-orbit:
     build:
-      context: ./apps/portal
+      context: ./apps/nova-orbit
       dockerfile: Dockerfile
     environment:
       - NODE_ENV=development
@@ -55,15 +55,15 @@ services:
     ports:
       - "3000:3000"
     depends_on:
-      - api
+      - nova-synth
     volumes:
-      - ./apps/portal:/app
+      - ./apps/nova-orbit:/app
       - /app/node_modules
 
-  # Admin App
-  admin:
+  # Nova Core - Admin App
+  nova-core:
     build:
-      context: ./apps/admin-next
+      context: ./apps/nova-core
       dockerfile: Dockerfile
     environment:
       - NODE_ENV=development
@@ -71,9 +71,41 @@ services:
     ports:
       - "3002:3000"
     depends_on:
-      - api
+      - nova-synth
     volumes:
-      - ./apps/admin-next:/app
+      - ./apps/nova-core:/app
+      - /app/node_modules
+
+  # Nova Pulse - Technician Workspace
+  nova-pulse:
+    build:
+      context: ./apps/nova-pulse
+      dockerfile: Dockerfile
+    environment:
+      - NODE_ENV=development
+      - NEXT_PUBLIC_API_URL=http://localhost:3001
+    ports:
+      - "3003:3000"
+    depends_on:
+      - nova-synth
+    volumes:
+      - ./apps/nova-pulse:/app
+      - /app/node_modules
+
+  # Nova Lore - Knowledge Base
+  nova-lore:
+    build:
+      context: ./apps/nova-lore
+      dockerfile: Dockerfile
+    environment:
+      - NODE_ENV=development
+      - NEXT_PUBLIC_API_URL=http://localhost:3001
+    ports:
+      - "3004:3000"
+    depends_on:
+      - nova-synth
+    volumes:
+      - ./apps/nova-lore:/app
       - /app/node_modules
 
 volumes:

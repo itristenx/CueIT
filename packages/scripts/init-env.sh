@@ -1,11 +1,17 @@
 #!/bin/bash
 set -e
 
-apps=(cueit-api cueit-admin cueit-slack)
+apps=(apps/nova-synth apps/nova-orbit apps/nova-core apps/nova-pulse apps/nova-lore apps/nova-comms)
 
 for app in "${apps[@]}"; do
-  example="$app/.env.example"
-  env="$app/.env"
+  if [ "$app" = "apps/nova-synth" ]; then
+    example="$app/.env.example"
+    env="$app/.env"
+  else
+    example="$app/.env.local.example"
+    env="$app/.env.local"
+  fi
+  
   if [ -f "$example" ]; then
     if [ ! -f "$env" ]; then
       cp "$example" "$env"

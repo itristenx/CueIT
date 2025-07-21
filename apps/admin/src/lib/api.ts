@@ -94,7 +94,7 @@ class ApiClient {
   // Get the current server URL from localStorage or environment
   private getServerUrl(): string {
     const storedUrl = localStorage.getItem('api_server_url');
-    const envUrl = import.meta.env.VITE_CUEIT_API_URL;
+    const envUrl = import.meta.env.VITE_NOVA_API_URL;
     const defaultUrl = 'http://localhost:3000';
     
     // Use stored URL if available, otherwise environment URL, otherwise default

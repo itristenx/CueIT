@@ -1,0 +1,612 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+  output   = "../generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// Core User Management
+model User {
+  id                String             @id @default(cuid())
+  clerkId           String             @unique
+  novaId            String             @unique @default(cuid()) // Nova Helix ID
+  email             String             @unique
+  firstName         String
+  lastName          String
+  displayName       String?
+  profileImageUrl   String?
+  department        String?
+  title             String?
+  phone             String?
+  location          String?
+  timezone          String?
+  language          String             @default("en")
+  status            UserStatus         @default(ACTIVE)
+  role              UserRole           @default(END_USER)
+  permissions       Json?              // RBAC permissions
+  metadata          Json?              // Additional user data
+  lastLoginAt       DateTime?
+  createdAt         DateTime           @default(now())
+  updatedAt         DateTime           @updatedAt
+
+  // Relationships
+  createdTickets    Ticket[]           @relation("TicketCreator")
+  assignedTickets   Ticket[]           @relation("TicketAssignee")
+  ticketComments    Comment[]
+  kbArticles        KBArticle[]
+  userGroups        UserGroup[]
+  notifications     Notification[]
+  auditLogs         AuditLog[]
+  workflowStates    WorkflowState[]
+  catalogItems      RequestCatalogItem[] @relation("CatalogItemCreator")
+  userXP            UserXP?
+  xpTransactions    XPTransaction[]
+
+  @@map("users")
+}
+
+model UserGroup {
+  id          String   @id @default(cuid())
+  name        String   @unique
+  description String?
+  permissions Json?    // Group-level permissions
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  // Relationships
+  users       User[]
+
+  @@map("user_groups")
+}
+
+// Ticket Management
+model Ticket {
+  id                String           @id @default(cuid())
+  ticketNumber      String           @unique
+  title             String
+  description       String
+  priority          Priority         @default(MEDIUM)
+  status            TicketStatus     @default(OPEN)
+  type              TicketType       @default(INC)
+  resolutionType    ResolutionType?
+  category          String?
+  subcategory       String?
+  tags              String[]
+  metadata          Json?            // Custom fields
+  createdAt         DateTime         @default(now())
+  updatedAt         DateTime         @updatedAt
+  resolvedAt        DateTime?
+  closedAt          DateTime?
+  dueDate           DateTime?
+  slaBreachAt       DateTime?        // SLA breach timestamp
+  
+  // Relationships
+  creatorId         String
+  creator           User             @relation("TicketCreator", fields: [creatorId], references: [id])
+  assigneeId        String?
+  assignee          User?            @relation("TicketAssignee", fields: [assigneeId], references: [id])
+  
+  // Request catalog relationship
+  catalogItemId     String?
+  catalogItem       RequestCatalogItem? @relation("CatalogItemRequests", fields: [catalogItemId], references: [id])
+  
+  // Ticket relationships
+  parentTicketId    String?
+  parentTicket      Ticket?          @relation("TicketParent", fields: [parentTicketId], references: [id])
+  childTickets      Ticket[]         @relation("TicketParent")
+  relatedTickets    TicketRelation[] @relation("TicketRelationFrom")
+  relatedToTickets  TicketRelation[] @relation("TicketRelationTo")
+  
+  comments          Comment[]
+  attachments       Attachment[]
+  workflowStates    WorkflowState[]
+  timeEntries       TimeEntry[]
+  notifications     Notification[]
+  auditLogs         AuditLog[]
+  slaEvents         SLAEvent[]
+  kbArticleLinks    TicketKBLink[]
+
+  @@map("tickets")
+}
+
+model Comment {
+  id         String      @id @default(cuid())
+  content    String
+  isInternal Boolean     @default(false)
+  createdAt  DateTime    @default(now())
+  updatedAt  DateTime    @updatedAt
+
+  // Relationships
+  ticketId   String
+  ticket     Ticket      @relation(fields: [ticketId], references: [id], onDelete: Cascade)
+  authorId   String
+  author     User        @relation(fields: [authorId], references: [id])
+  
+  attachments Attachment[]
+
+  @@map("comments")
+}
+
+model Attachment {
+  id          String    @id @default(cuid())
+  filename    String
+  originalName String
+  mimeType    String
+  size        Int
+  url         String
+  createdAt   DateTime  @default(now())
+
+  // Relationships
+  ticketId    String?
+  ticket      Ticket?   @relation(fields: [ticketId], references: [id], onDelete: Cascade)
+  commentId   String?
+  comment     Comment?  @relation(fields: [commentId], references: [id], onDelete: Cascade)
+  kbArticleId String?
+  kbArticle   KBArticle? @relation(fields: [kbArticleId], references: [id], onDelete: Cascade)
+
+  @@map("attachments")
+}
+
+// Knowledge Base
+model KBArticle {
+  id          String        @id @default(cuid())
+  title       String
+  content     String
+  excerpt     String?
+  category    String?
+  tags        String[]
+  status      ArticleStatus @default(DRAFT)
+  views       Int           @default(0)
+  helpful     Int           @default(0)
+  notHelpful  Int           @default(0)
+  createdAt   DateTime      @default(now())
+  updatedAt   DateTime      @updatedAt
+  publishedAt DateTime?
+
+  // Relationships
+  authorId    String
+  author      User          @relation(fields: [authorId], references: [id])
+  attachments Attachment[]
+  ticketLinks TicketKBLink[]
+
+  @@map("kb_articles")
+}
+
+// Workflow Management
+model WorkflowState {
+  id         String   @id @default(cuid())
+  state      String
+  timestamp  DateTime @default(now())
+  metadata   Json?
+
+  // Relationships
+  ticketId   String
+  ticket     Ticket   @relation(fields: [ticketId], references: [id], onDelete: Cascade)
+  userId     String
+  user       User     @relation(fields: [userId], references: [id])
+
+  @@map("workflow_states")
+}
+
+// Time Tracking
+model TimeEntry {
+  id          String   @id @default(cuid())
+  description String?
+  hours       Float
+  date        DateTime @default(now())
+  createdAt   DateTime @default(now())
+
+  // Relationships
+  ticketId    String
+  ticket      Ticket   @relation(fields: [ticketId], references: [id], onDelete: Cascade)
+
+  @@map("time_entries")
+}
+
+// Notifications
+model Notification {
+  id        String             @id @default(cuid())
+  type      NotificationType
+  title     String
+  message   String
+  read      Boolean            @default(false)
+  createdAt DateTime           @default(now())
+
+  // Relationships
+  userId    String
+  user      User               @relation(fields: [userId], references: [id], onDelete: Cascade)
+  ticketId  String?
+  ticket    Ticket?            @relation(fields: [ticketId], references: [id], onDelete: Cascade)
+
+  @@map("notifications")
+}
+
+// Audit Logging
+model AuditLog {
+  id        String   @id @default(cuid())
+  action    String
+  entity    String
+  entityId  String
+  oldValues Json?
+  newValues Json?
+  timestamp DateTime @default(now())
+
+  // Relationships
+  userId    String
+  user      User     @relation(fields: [userId], references: [id])
+  ticketId  String?
+  ticket    Ticket?  @relation(fields: [ticketId], references: [id])
+
+  @@map("audit_logs")
+}
+
+// Configuration
+model Configuration {
+  id        String   @id @default(cuid())
+  key       String   @unique
+  value     String
+  type      String   @default("string")
+  category  String   @default("general")
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@map("configurations")
+}
+
+// Integration Settings
+model Integration {
+  id        String   @id @default(cuid())
+  type      String   // slack, email, helpscout, etc.
+  name      String
+  config    Json     // Integration-specific configuration
+  enabled   Boolean  @default(true)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@map("integrations")
+}
+
+// Kiosk Management
+model Kiosk {
+  id          String   @id @default(cuid())
+  name        String
+  location    String?
+  logoUrl     String?
+  bgUrl       String?
+  active      Boolean  @default(true)
+  status      String   @default("open")
+  lastSeen    DateTime?
+  config      Json?    // Kiosk-specific configuration
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  // Relationships
+  activations KioskActivation[]
+
+  @@map("kiosks")
+}
+
+model KioskActivation {
+  id        String   @id @default(cuid())
+  code      String   @unique
+  qrCode    String
+  expiresAt DateTime
+  used      Boolean  @default(false)
+  usedAt    DateTime?
+  createdAt DateTime @default(now())
+
+  // Relationships
+  kioskId   String?
+  kiosk     Kiosk?   @relation(fields: [kioskId], references: [id], onDelete: Cascade)
+
+  @@map("kiosk_activations")
+}
+
+// Assets Management
+model Asset {
+  id           String   @id @default(cuid())
+  name         String
+  type         String
+  filename     String
+  originalName String
+  mimeType     String
+  size         Int
+  url          String
+  metadata     Json?
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  @@map("assets")
+}
+
+// Feedback
+model Feedback {
+  id        String   @id @default(cuid())
+  type      String   // bug, feature, general
+  title     String
+  content   String
+  rating    Int?     // 1-5 scale
+  status    String   @default("pending")
+  email     String?
+  metadata  Json?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@map("feedback")
+}
+
+// Security Settings
+model SecuritySetting {
+  id        String   @id @default(cuid())
+  key       String   @unique
+  value     String
+  encrypted Boolean  @default(false)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@map("security_settings")
+}
+
+// Server Information
+model ServerInfo {
+  id           String   @id @default(cuid())
+  version      String
+  environment  String
+  maintenance  Boolean  @default(false)
+  announcement String?
+  metadata     Json?
+  updatedAt    DateTime @updatedAt
+
+  @@map("server_info")
+}
+
+// Request Catalog Management
+model RequestCatalogItem {
+  id               String                    @id @default(cuid())
+  name             String
+  description      String
+  category         RequestCatalogCategory
+  formFields       Json                      // Array of form field definitions
+  icon             String?
+  isActive         Boolean                   @default(true)
+  tags             String[]
+  approvalRequired Json?                     // Approval workflow configuration
+  createdAt        DateTime                  @default(now())
+  updatedAt        DateTime                  @updatedAt
+  
+  // Relationships
+  createdBy        String
+  creator          User                      @relation("CatalogItemCreator", fields: [createdBy], references: [id])
+  requests         Ticket[]                  @relation("CatalogItemRequests")
+
+  @@map("request_catalog_items")
+}
+
+enum RequestCatalogCategory {
+  IT
+  HR
+  FACILITIES
+  OPERATIONS
+  FINANCE
+  OTHER
+}
+
+enum UserStatus {
+  ACTIVE
+  INACTIVE
+  SUSPENDED
+}
+
+enum TicketStatus {
+  OPEN
+  IN_PROGRESS
+  PENDING_CUSTOMER
+  PENDING_SUPPORT
+  RESOLVED
+  CLOSED
+}
+
+enum TicketType {
+  INC
+  REQ
+  HR
+  OP
+  TASK
+  CR
+  PRB
+}
+
+enum ResolutionType {
+  RESOLVED_PERMANENT
+  QUICK_FIX
+  WORKAROUND
+  CANCELLED
+  NOT_REPRODUCIBLE
+}
+
+enum Priority {
+  LOW
+  MEDIUM
+  HIGH
+  URGENT
+}
+
+enum ArticleStatus {
+  DRAFT
+  PUBLISHED
+  ARCHIVED
+}
+
+enum NotificationType {
+  TICKET_CREATED
+  TICKET_UPDATED
+  TICKET_ASSIGNED
+  TICKET_RESOLVED
+  COMMENT_ADDED
+  SLA_BREACH
+  SYSTEM_ALERT
+  XP_EARNED
+  BADGE_EARNED
+}
+
+// Ticket Relationships
+model TicketRelation {
+  id           String            @id @default(cuid())
+  type         TicketRelationType
+  createdAt    DateTime          @default(now())
+  
+  // Relationships
+  fromTicketId String
+  fromTicket   Ticket            @relation("TicketRelationFrom", fields: [fromTicketId], references: [id], onDelete: Cascade)
+  toTicketId   String
+  toTicket     Ticket            @relation("TicketRelationTo", fields: [toTicketId], references: [id], onDelete: Cascade)
+  
+  @@unique([fromTicketId, toTicketId, type])
+  @@map("ticket_relations")
+}
+
+// Knowledge Base Links to Tickets
+model TicketKBLink {
+  id          String    @id @default(cuid())
+  createdAt   DateTime  @default(now())
+  
+  // Relationships
+  ticketId    String
+  ticket      Ticket    @relation(fields: [ticketId], references: [id], onDelete: Cascade)
+  kbArticleId String
+  kbArticle   KBArticle @relation(fields: [kbArticleId], references: [id], onDelete: Cascade)
+  
+  @@unique([ticketId, kbArticleId])
+  @@map("ticket_kb_links")
+}
+
+// SLA Management
+model SLARule {
+  id                 String           @id @default(cuid())
+  name               String
+  ticketType         TicketType
+  priority           Priority?
+  department         String?
+  responseTimeMinutes Int?            // Response SLA in minutes
+  resolutionTimeMinutes Int?          // Resolution SLA in minutes
+  escalationChain    Json?            // Escalation workflow
+  businessHours      Json?            // Business hours configuration
+  isActive           Boolean          @default(true)
+  createdAt          DateTime         @default(now())
+  updatedAt          DateTime         @updatedAt
+  
+  // Relationships
+  slaEvents          SLAEvent[]
+  
+  @@map("sla_rules")
+}
+
+model SLAEvent {
+  id          String      @id @default(cuid())
+  type        SLAEventType
+  timestamp   DateTime    @default(now())
+  details     Json?       // Event details and context
+  
+  // Relationships
+  ticketId    String
+  ticket      Ticket      @relation(fields: [ticketId], references: [id], onDelete: Cascade)
+  slaRuleId   String
+  slaRule     SLARule     @relation(fields: [slaRuleId], references: [id])
+  
+  @@map("sla_events")
+}
+
+// Nova Ascend - Gamification System
+model UserXP {
+  id        String   @id @default(cuid())
+  userId    String   @unique
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  stardust  Int      @default(0)
+  level     Int      @default(1)
+  title     String   @default("Cadet")
+  badges    String[] // Array of earned badge IDs
+  streak    Int      @default(0)
+  lastActionAt DateTime?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  
+  // Relationships
+  xpTransactions XPTransaction[]
+  
+  @@map("user_xp")
+}
+
+model XPTransaction {
+  id          String   @id @default(cuid())
+  userId      String
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  userXpId    String
+  userXp      UserXP   @relation(fields: [userXpId], references: [id], onDelete: Cascade)
+  action      String   // Action that earned XP
+  amount      Int      // XP amount earned
+  source      String?  // Source module (orbit, pulse, etc.)
+  metadata    Json?    // Additional context
+  createdAt   DateTime @default(now())
+  
+  @@map("xp_transactions")
+}
+
+// Nova MCP Server - Conversation Memory
+model Conversation {
+  id          String   @id @default(cuid())
+  userId      String   // Reference to user
+  module      String   // Nova module (orbit, core, beacon, etc.)
+  message     String   // User's message
+  response    String   // AI response
+  actions     Json?    // Suggested actions
+  timestamp   DateTime @default(now())
+  
+  @@map("conversations")
+}
+
+// Nova Modules Configuration
+model ModuleConfig {
+  id          String   @id @default(cuid())
+  module      String   @unique // orbit, core, pulse, etc.
+  config      Json     // Module-specific configuration
+  isEnabled   Boolean  @default(true)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  
+  @@map("module_configs")
+}
+
+enum UserRole {
+  GUEST
+  END_USER
+  MANAGER
+  TECHNICIAN
+  TECH_LEAD
+  ADMIN
+  OPS
+  HR
+}
+
+enum TicketRelationType {
+  DUPLICATES
+  RELATED
+  BLOCKS
+  BLOCKED_BY
+  CAUSED_BY
+  CAUSES
+}
+
+enum SLAEventType {
+  RESPONSE_DUE
+  RESOLUTION_DUE
+  RESPONSE_BREACHED
+  RESOLUTION_BREACHED
+  ESCALATED
+  RESOLVED
+}

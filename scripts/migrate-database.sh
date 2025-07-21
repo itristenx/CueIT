@@ -9,7 +9,7 @@ SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 PROJECT_ROOT="$(cd "${SCRIPT_DIR}/.." && pwd)"
 
 # Configuration
-SQLITE_DB="${PROJECT_ROOT}/packages/api/database.sqlite"
+SQLITE_DB="${PROJECT_ROOT}/packages/api.backup/database.sqlite"
 POSTGRES_URL="${DATABASE_URL:-postgresql://localhost:5432/queueit_db}"
 BACKUP_DIR="${PROJECT_ROOT}/backups/$(date +%Y%m%d_%H%M%S)"
 
