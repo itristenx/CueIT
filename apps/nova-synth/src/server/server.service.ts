@@ -6,12 +6,12 @@ import { ConfigService } from '@nestjs/config';
 export class ServerService {
   constructor(
     private prisma: PrismaService,
-    private config: ConfigService
+    private config: ConfigService,
   ) {}
 
   async getServerInfo() {
     let serverInfo = await this.prisma.serverInfo.findFirst();
-    
+
     if (!serverInfo) {
       // Create default server info if none exists
       serverInfo = await this.prisma.serverInfo.create({
@@ -19,23 +19,33 @@ export class ServerService {
           version: '2.0.0',
           environment: this.config.get('NODE_ENV', 'development'),
           maintenance: false,
+          name: 'nova-synth-server',
         },
       });
     }
 
     return {
       ...serverInfo,
-      organizationName: this.config.get('ORGANIZATION_NAME', 'Nova Universe Organization'),
-      organizationLogoUrl: this.config.get('ORGANIZATION_LOGO_URL', ''),
-      minPinLength: parseInt(this.config.get('MIN_PIN_LENGTH', '4')),
-      maxPinLength: parseInt(this.config.get('MAX_PIN_LENGTH', '8')),
+      organizationName: this.config.get<string>(
+        'ORGANIZATION_NAME',
+        'Nova Universe Organization',
+      ),
+      organizationLogoUrl: this.config.get<string>('ORGANIZATION_LOGO_URL', ''),
+      minPinLength: parseInt(this.config.get<string>('MIN_PIN_LENGTH', '4')),
+      maxPinLength: parseInt(this.config.get<string>('MAX_PIN_LENGTH', '8')),
       apiVersion: '2.0.0',
     };
   }
 
-  async updateServerInfo(data: any) {
+  async updateServerInfo(data: {
+    version: string;
+    environment: string;
+    maintenance: boolean;
+    announcement: string;
+    metadata: Record<string, unknown>;
+  }): Promise<unknown> {
     const serverInfo = await this.prisma.serverInfo.findFirst();
-    
+
     if (serverInfo) {
       return await this.prisma.serverInfo.update({
         where: { id: serverInfo.id },
@@ -44,7 +54,7 @@ export class ServerService {
           environment: data.environment,
           maintenance: data.maintenance,
           announcement: data.announcement,
-          metadata: data.metadata,
+          metadata: JSON.stringify(data.metadata),
         },
       });
     } else {
@@ -54,7 +64,8 @@ export class ServerService {
           environment: data.environment || 'development',
           maintenance: data.maintenance || false,
           announcement: data.announcement,
-          metadata: data.metadata,
+          metadata: JSON.stringify(data.metadata),
+          name: 'nova-synth-server',
         },
       });
     }
@@ -64,9 +75,9 @@ export class ServerService {
     try {
       // Test database connection
       await this.prisma.$queryRaw`SELECT 1`;
-      
+
       const serverInfo = await this.getServerInfo();
-      
+
       return {
         status: 'healthy',
         timestamp: new Date().toISOString(),
@@ -80,7 +91,7 @@ export class ServerService {
       return {
         status: 'unhealthy',
         timestamp: new Date().toISOString(),
-        error: error.message,
+        error: (error as Error).message,
         database: 'disconnected',
       };
     }
@@ -88,7 +99,7 @@ export class ServerService {
 
   async setMaintenanceMode(enabled: boolean, announcement?: string) {
     const serverInfo = await this.prisma.serverInfo.findFirst();
-    
+
     if (serverInfo) {
       return await this.prisma.serverInfo.update({
         where: { id: serverInfo.id },
@@ -104,25 +115,21 @@ export class ServerService {
           environment: this.config.get('NODE_ENV', 'development'),
           maintenance: enabled,
           announcement: announcement || null,
+          name: 'nova-synth-server',
         },
       });
     }
   }
 
   async getSystemStats() {
-    const [
-      totalUsers,
-      totalTickets,
-      totalKiosks,
-      totalAssets,
-      totalFeedback,
-    ] = await Promise.all([
-      this.prisma.user.count(),
-      this.prisma.ticket.count(),
-      this.prisma.kiosk.count(),
-      this.prisma.asset.count(),
-      this.prisma.feedback.count(),
-    ]);
+    const [totalUsers, totalTickets, totalKiosks, totalAssets, totalFeedback] =
+      await Promise.all([
+        this.prisma.user.count(),
+        this.prisma.ticket.count(),
+        this.prisma.kiosk.count(),
+        this.prisma.asset.count(),
+        this.prisma.feedback.count(),
+      ]);
 
     return {
       users: totalUsers,

@@ -64,7 +64,10 @@ export class KnowledgeBaseController {
   }
 
   @Patch(':id')
-  update(@Param('id') id: string, @Body() updateKBArticleDto: UpdateKBArticleDto) {
+  update(
+    @Param('id') id: string,
+    @Body() updateKBArticleDto: UpdateKBArticleDto,
+  ) {
     return this.knowledgeBaseService.update(id, updateKBArticleDto);
   }
 
@@ -74,7 +77,10 @@ export class KnowledgeBaseController {
   }
 
   @Post(':id/helpful')
-  async markHelpful(@Param('id') id: string, @Body() body: { helpful: boolean }) {
+  async markHelpful(
+    @Param('id') id: string,
+    @Body() body: { helpful: boolean },
+  ) {
     return this.knowledgeBaseService.markHelpful(id, body.helpful);
   }
 }

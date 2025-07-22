@@ -1,4 +1,12 @@
-import { Controller, Post, Get, Body, Headers, UnauthorizedException, Version } from '@nestjs/common';
+import {
+  Controller,
+  Post,
+  Get,
+  Body,
+  Headers,
+  UnauthorizedException,
+  Version,
+} from '@nestjs/common';
 import { McpService } from './mcp.service';
 import { AiService } from './ai.service';
 import { MemoryService } from './memory.service';
@@ -47,10 +55,10 @@ export class McpController {
     }
 
     const token = authorization.slice(7);
-    
+
     // Process the message through the MCP pipeline
     const response = await this.mcpService.processMessage(request, token);
-    
+
     return response;
   }
 
@@ -77,13 +85,22 @@ export class McpController {
     }
 
     const token = authorization.slice(7);
-    
-    return await this.mcpService.executeTool(request.tool, request.args, request.user, token);
+
+    return await this.mcpService.executeTool(
+      request.tool,
+      request.args,
+      request.user,
+      token,
+    );
   }
 
   @Get('health')
   @Version('2')
-  async healthCheck(): Promise<{ status: string; timestamp: string; service: string }> {
+  async healthCheck(): Promise<{
+    status: string;
+    timestamp: string;
+    service: string;
+  }> {
     return {
       status: 'ok',
       timestamp: new Date().toISOString(),

@@ -22,14 +22,44 @@ export class SpamFilterService {
   private readonly logger = new Logger(SpamFilterService.name);
   private readonly rateLimitMap = new Map<string, RateLimitEntry>();
   private readonly spamPatterns: SpamPattern[] = [
-    { pattern: 'viagra|cialis|casino|lottery|winner', type: 'body', action: 'block', weight: 10 },
-    { pattern: 'congratulations.*won.*money', type: 'body', action: 'block', weight: 8 },
+    {
+      pattern: 'viagra|cialis|casino|lottery|winner',
+      type: 'body',
+      action: 'block',
+      weight: 10,
+    },
+    {
+      pattern: 'congratulations.*won.*money',
+      type: 'body',
+      action: 'block',
+      weight: 8,
+    },
     { pattern: '\\$\\d+.*free.*now', type: 'body', action: 'flag', weight: 5 },
-    { pattern: 'click.*here.*immediately', type: 'body', action: 'flag', weight: 4 },
-    { pattern: 'urgent.*action.*required', type: 'subject', action: 'flag', weight: 3 },
-    { pattern: 'limited.*time.*offer', type: 'subject', action: 'flag', weight: 3 },
+    {
+      pattern: 'click.*here.*immediately',
+      type: 'body',
+      action: 'flag',
+      weight: 4,
+    },
+    {
+      pattern: 'urgent.*action.*required',
+      type: 'subject',
+      action: 'flag',
+      weight: 3,
+    },
+    {
+      pattern: 'limited.*time.*offer',
+      type: 'subject',
+      action: 'flag',
+      weight: 3,
+    },
     { pattern: '^test(ing)?$', type: 'subject', action: 'flag', weight: 2 },
-    { pattern: 'aaaaaa|bbbbbb|cccccc', type: 'body', action: 'flag', weight: 4 },
+    {
+      pattern: 'aaaaaa|bbbbbb|cccccc',
+      type: 'body',
+      action: 'flag',
+      weight: 4,
+    },
     { pattern: '^.{500,}$', type: 'body', action: 'flag', weight: 2 }, // Very long messages
   ];
 
@@ -38,16 +68,20 @@ export class SpamFilterService {
   /**
    * Check if a request should be blocked due to rate limiting
    */
-  checkRateLimit(identifier: string, maxRequests: number = 10, windowMinutes: number = 60): {
+  checkRateLimit(
+    identifier: string,
+    maxRequests: number = 10,
+    windowMinutes: number = 60,
+  ): {
     allowed: boolean;
     remaining: number;
     resetTime: Date;
   } {
     const now = new Date();
     const windowStart = new Date(now.getTime() - windowMinutes * 60 * 1000);
-    
+
     let entry = this.rateLimitMap.get(identifier);
-    
+
     if (!entry) {
       entry = {
         count: 1,
@@ -56,7 +90,7 @@ export class SpamFilterService {
         blocked: false,
       };
       this.rateLimitMap.set(identifier, entry);
-      
+
       return {
         allowed: true,
         remaining: maxRequests - 1,
@@ -80,7 +114,7 @@ export class SpamFilterService {
       entry.lastRequest = now;
       entry.blocked = false;
       entry.blockUntil = undefined;
-      
+
       return {
         allowed: true,
         remaining: maxRequests - 1,
@@ -96,9 +130,11 @@ export class SpamFilterService {
     if (entry.count > maxRequests) {
       entry.blocked = true;
       entry.blockUntil = new Date(now.getTime() + windowMinutes * 60 * 1000);
-      
-      this.logger.warn(`Rate limit exceeded for ${identifier}. Count: ${entry.count}, Max: ${maxRequests}`);
-      
+
+      this.logger.warn(
+        `Rate limit exceeded for ${identifier}. Count: ${entry.count}, Max: ${maxRequests}`,
+      );
+
       return {
         allowed: false,
         remaining: 0,
@@ -109,7 +145,9 @@ export class SpamFilterService {
     return {
       allowed: true,
       remaining: maxRequests - entry.count,
-      resetTime: new Date(entry.firstRequest.getTime() + windowMinutes * 60 * 1000),
+      resetTime: new Date(
+        entry.firstRequest.getTime() + windowMinutes * 60 * 1000,
+      ),
     };
   }
 
@@ -149,11 +187,14 @@ export class SpamFilterService {
       if (regex.test(textToCheck)) {
         spamScore += pattern.weight;
         matchedPatterns.push(pattern.pattern);
-        
+
         // Determine the most severe action
         if (pattern.action === 'block') {
           highestAction = 'block';
-        } else if (pattern.action === 'quarantine' && highestAction !== 'block') {
+        } else if (
+          pattern.action === 'quarantine' &&
+          highestAction !== 'block'
+        ) {
           highestAction = 'quarantine';
         } else if (pattern.action === 'flag' && highestAction === 'allow') {
           highestAction = 'flag';
@@ -164,14 +205,17 @@ export class SpamFilterService {
     // Additional heuristics
     if (content.body) {
       // Check for excessive special characters
-      const specialCharRatio = (content.body.match(/[!@#$%^&*()]/g) || []).length / content.body.length;
+      const specialCharRatio =
+        (content.body.match(/[!@#$%^&*()]/g) || []).length /
+        content.body.length;
       if (specialCharRatio > 0.1) {
         spamScore += 3;
         matchedPatterns.push('excessive_special_chars');
       }
 
       // Check for excessive uppercase
-      const uppercaseRatio = (content.body.match(/[A-Z]/g) || []).length / content.body.length;
+      const uppercaseRatio =
+        (content.body.match(/[A-Z]/g) || []).length / content.body.length;
       if (uppercaseRatio > 0.5 && content.body.length > 20) {
         spamScore += 2;
         matchedPatterns.push('excessive_uppercase');
@@ -195,7 +239,9 @@ export class SpamFilterService {
     }
 
     if (matchedPatterns.length > 0) {
-      this.logger.warn(`Spam detected. Score: ${spamScore}, Patterns: ${matchedPatterns.join(', ')}, Action: ${finalAction}`);
+      this.logger.warn(
+        `Spam detected. Score: ${spamScore}, Patterns: ${matchedPatterns.join(', ')}, Action: ${finalAction}`,
+      );
     }
 
     return {
@@ -260,8 +306,12 @@ export class SpamFilterService {
     };
   } {
     // Check rate limiting
-    const rateLimitResult = this.checkRateLimit(ticketData.submitterIdentifier, 5, 60);
-    
+    const rateLimitResult = this.checkRateLimit(
+      ticketData.submitterIdentifier,
+      5,
+      60,
+    );
+
     if (!rateLimitResult.allowed) {
       return {
         allowed: false,
@@ -290,7 +340,7 @@ export class SpamFilterService {
 
     // Determine final action
     let finalAction = contentAnalysis.action;
-    
+
     if (ipCheck.isSuspicious) {
       finalAction = finalAction === 'allow' ? 'flag' : finalAction;
     }
@@ -316,16 +366,16 @@ export class SpamFilterService {
   cleanupRateLimits() {
     const now = new Date();
     const cutoff = new Date(now.getTime() - 24 * 60 * 60 * 1000); // 24 hours ago
-    
+
     let cleanedUp = 0;
-    
+
     for (const [key, entry] of this.rateLimitMap.entries()) {
       if (entry.lastRequest < cutoff) {
         this.rateLimitMap.delete(key);
         cleanedUp++;
       }
     }
-    
+
     if (cleanedUp > 0) {
       this.logger.log(`Cleaned up ${cleanedUp} old rate limit entries`);
     }
@@ -344,16 +394,18 @@ export class SpamFilterService {
       lastRequest: Date;
     }>;
   } {
-    const entries = Array.from(this.rateLimitMap.entries()).map(([key, entry]) => ({
-      identifier: key,
-      count: entry.count,
-      blocked: entry.blocked,
-      lastRequest: entry.lastRequest,
-    }));
+    const entries = Array.from(this.rateLimitMap.entries()).map(
+      ([key, entry]) => ({
+        identifier: key,
+        count: entry.count,
+        blocked: entry.blocked,
+        lastRequest: entry.lastRequest,
+      }),
+    );
 
     return {
       totalEntries: this.rateLimitMap.size,
-      blockedEntries: entries.filter(e => e.blocked).length,
+      blockedEntries: entries.filter((e) => e.blocked).length,
       entries,
     };
   }

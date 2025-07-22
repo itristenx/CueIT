@@ -1,6 +1,6 @@
 import { Inter } from "next/font/google";
 import "./globals.css";
-import { ClerkProvider } from "@clerk/nextjs";
+import { SessionProvider } from "next-auth/react";
 const inter = Inter({ subsets: ["latin"] });
 export const metadata = {
     title: "Nova Core - Admin Dashboard",
@@ -14,7 +14,7 @@ export const metadata = {
     },
 };
 export default function RootLayout({ children, }) {
-    return (<ClerkProvider>
+    return (<SessionProvider>
       <html lang="en">
         <body className={inter.className}>
           <div className="min-h-screen bg-background">
@@ -22,5 +22,5 @@ export default function RootLayout({ children, }) {
           </div>
         </body>
       </html>
-    </ClerkProvider>);
+    </SessionProvider>);
 }

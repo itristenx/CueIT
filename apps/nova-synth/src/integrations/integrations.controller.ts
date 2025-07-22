@@ -28,21 +28,28 @@ export class IntegrationsController {
   }
 
   @Post()
-  async create(@Body() createIntegrationDto: {
-    type: string;
-    name: string;
-    config: any;
-    enabled?: boolean;
-  }) {
+  async create(
+    @Body()
+    createIntegrationDto: {
+      type: string;
+      name: string;
+      config: any;
+      enabled?: boolean;
+    },
+  ) {
     return this.integrationsService.create(createIntegrationDto);
   }
 
   @Put(':id')
-  async update(@Param('id') id: string, @Body() updateIntegrationDto: {
-    name?: string;
-    config?: any;
-    enabled?: boolean;
-  }) {
+  async update(
+    @Param('id') id: string,
+    @Body()
+    updateIntegrationDto: {
+      name?: string;
+      config?: any;
+      enabled?: boolean;
+    },
+  ) {
     return this.integrationsService.update(id, updateIntegrationDto);
   }
 

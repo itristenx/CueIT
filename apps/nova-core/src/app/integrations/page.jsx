@@ -159,7 +159,7 @@ export default function IntegrationsPage() {
                 throw new Error('Integration test failed');
             }
             // Update integration status
-            setIntegrations(prev => prev.map(integration => integration.id === integrationId
+            setIntegrations((prev) => prev.map((integration) => integration.id === integrationId
                 ? Object.assign(Object.assign({}, integration), { status: 'connected' }) : integration));
             alert('Integration test successful!');
         }
@@ -408,7 +408,7 @@ export default function IntegrationsPage() {
                     <div className="space-y-2">
                       <Label htmlFor="botToken">Bot Token</Label>
                       <div className="relative">
-                        <Input id="botToken" type={showPasswords ? "text" : "password"} value={activeIntegration.config.botToken || ''} onChange={(e) => setActiveIntegration(Object.assign(Object.assign({}, activeIntegration), { config: Object.assign(Object.assign({}, activeIntegration.config), { botToken: e.target.value }) }))} placeholder="xoxb-your-bot-token"/>
+                        <Input id="botToken" title="Bot Token" type={showPasswords ? "text" : "password"} value={activeIntegration.config.botToken || ''} onChange={(e) => setActiveIntegration(Object.assign(Object.assign({}, activeIntegration), { config: Object.assign(Object.assign({}, activeIntegration.config), { botToken: e.target.value }) }))} placeholder="xoxb-your-bot-token"/>
                         <Button type="button" variant="ghost" size="sm" className="absolute right-0 top-0 h-full px-3 py-2 hover:bg-transparent" onClick={() => setShowPasswords(!showPasswords)}>
                           {showPasswords ? <EyeOff className="h-4 w-4"/> : <Eye className="h-4 w-4"/>}
                         </Button>
@@ -417,12 +417,12 @@ export default function IntegrationsPage() {
                     
                     <div className="space-y-2">
                       <Label htmlFor="signingSecret">Signing Secret</Label>
-                      <Input id="signingSecret" type={showPasswords ? "text" : "password"} value={activeIntegration.config.signingSecret || ''} onChange={(e) => setActiveIntegration(Object.assign(Object.assign({}, activeIntegration), { config: Object.assign(Object.assign({}, activeIntegration.config), { signingSecret: e.target.value }) }))} placeholder="your-signing-secret"/>
+                      <Input id="signingSecret" title="Signing Secret" type={showPasswords ? "text" : "password"} value={activeIntegration.config.signingSecret || ''} onChange={(e) => setActiveIntegration(Object.assign(Object.assign({}, activeIntegration), { config: Object.assign(Object.assign({}, activeIntegration.config), { signingSecret: e.target.value }) }))} placeholder="your-signing-secret"/>
                     </div>
                     
                     <div className="space-y-2">
                       <Label htmlFor="channel">Default Channel</Label>
-                      <Input id="channel" value={activeIntegration.config.channel || ''} onChange={(e) => setActiveIntegration(Object.assign(Object.assign({}, activeIntegration), { config: Object.assign(Object.assign({}, activeIntegration.config), { channel: e.target.value }) }))} placeholder="#support"/>
+                      <Input id="channel" title="Default Channel" value={activeIntegration.config.channel || ''} onChange={(e) => setActiveIntegration(Object.assign(Object.assign({}, activeIntegration), { config: Object.assign(Object.assign({}, activeIntegration.config), { channel: e.target.value }) }))} placeholder="#support"/>
                     </div>
                   </div>)}
 
@@ -431,24 +431,24 @@ export default function IntegrationsPage() {
                     <div className="grid gap-4 md:grid-cols-2">
                       <div className="space-y-2">
                         <Label htmlFor="host">SMTP Host</Label>
-                        <Input id="host" value={activeIntegration.config.host || ''} onChange={(e) => setActiveIntegration(Object.assign(Object.assign({}, activeIntegration), { config: Object.assign(Object.assign({}, activeIntegration.config), { host: e.target.value }) }))} placeholder="smtp.gmail.com"/>
+                        <Input id="host" title="SMTP Host" value={activeIntegration.config.host || ''} onChange={(e) => setActiveIntegration(Object.assign(Object.assign({}, activeIntegration), { config: Object.assign(Object.assign({}, activeIntegration.config), { host: e.target.value }) }))} placeholder="smtp.gmail.com"/>
                       </div>
                       
                       <div className="space-y-2">
                         <Label htmlFor="port">Port</Label>
-                        <Input id="port" type="number" value={activeIntegration.config.port || ''} onChange={(e) => setActiveIntegration(Object.assign(Object.assign({}, activeIntegration), { config: Object.assign(Object.assign({}, activeIntegration.config), { port: parseInt(e.target.value) }) }))} placeholder="587"/>
+                        <Input id="port" title="Port" type="number" value={activeIntegration.config.port || ''} onChange={(e) => setActiveIntegration(Object.assign(Object.assign({}, activeIntegration), { config: Object.assign(Object.assign({}, activeIntegration.config), { port: parseInt(e.target.value) }) }))} placeholder="587"/>
                       </div>
                     </div>
                     
                     <div className="space-y-2">
                       <Label htmlFor="user">Username</Label>
-                      <Input id="user" value={activeIntegration.config.user || ''} onChange={(e) => setActiveIntegration(Object.assign(Object.assign({}, activeIntegration), { config: Object.assign(Object.assign({}, activeIntegration.config), { user: e.target.value }) }))} placeholder="support@company.com"/>
+                      <Input id="user" title="Username" value={activeIntegration.config.user || ''} onChange={(e) => setActiveIntegration(Object.assign(Object.assign({}, activeIntegration), { config: Object.assign(Object.assign({}, activeIntegration.config), { user: e.target.value }) }))} placeholder="support@company.com"/>
                     </div>
                     
                     <div className="space-y-2">
                       <Label htmlFor="password">Password</Label>
                       <div className="relative">
-                        <Input id="password" type={showPasswords ? "text" : "password"} value={activeIntegration.config.password || ''} onChange={(e) => setActiveIntegration(Object.assign(Object.assign({}, activeIntegration), { config: Object.assign(Object.assign({}, activeIntegration.config), { password: e.target.value }) }))} placeholder="your-password"/>
+                        <Input id="password" title="Password" type={showPasswords ? "text" : "password"} value={activeIntegration.config.password || ''} onChange={(e) => setActiveIntegration(Object.assign(Object.assign({}, activeIntegration), { config: Object.assign(Object.assign({}, activeIntegration.config), { password: e.target.value }) }))} placeholder="your-password"/>
                         <Button type="button" variant="ghost" size="sm" className="absolute right-0 top-0 h-full px-3 py-2 hover:bg-transparent" onClick={() => setShowPasswords(!showPasswords)}>
                           {showPasswords ? <EyeOff className="h-4 w-4"/> : <Eye className="h-4 w-4"/>}
                         </Button>
@@ -457,7 +457,7 @@ export default function IntegrationsPage() {
                     
                     <div className="flex items-center space-x-2">
                       <input type="checkbox" id="secure" checked={activeIntegration.config.secure || false} onChange={(e) => setActiveIntegration(Object.assign(Object.assign({}, activeIntegration), { config: Object.assign(Object.assign({}, activeIntegration.config), { secure: e.target.checked }) }))} className="rounded border-gray-300"/>
-                      <Label htmlFor="secure">Use SSL/TLS</Label>
+                      <label htmlFor="secure">Use SSL/TLS</label>
                     </div>
                   </div>)}
 
@@ -466,29 +466,29 @@ export default function IntegrationsPage() {
                     <div className="grid gap-4 md:grid-cols-2">
                       <div className="space-y-2">
                         <Label htmlFor="ldapHost">LDAP Host</Label>
-                        <Input id="ldapHost" value={activeIntegration.config.host || ''} onChange={(e) => setActiveIntegration(Object.assign(Object.assign({}, activeIntegration), { config: Object.assign(Object.assign({}, activeIntegration.config), { host: e.target.value }) }))} placeholder="ldap.company.com"/>
+                        <Input id="ldapHost" title="LDAP Host" value={activeIntegration.config.host || ''} onChange={(e) => setActiveIntegration(Object.assign(Object.assign({}, activeIntegration), { config: Object.assign(Object.assign({}, activeIntegration.config), { host: e.target.value }) }))} placeholder="ldap.company.com"/>
                       </div>
                       
                       <div className="space-y-2">
                         <Label htmlFor="ldapPort">Port</Label>
-                        <Input id="ldapPort" type="number" value={activeIntegration.config.port || ''} onChange={(e) => setActiveIntegration(Object.assign(Object.assign({}, activeIntegration), { config: Object.assign(Object.assign({}, activeIntegration.config), { port: parseInt(e.target.value) }) }))} placeholder="389"/>
+                        <Input id="ldapPort" title="Port" type="number" value={activeIntegration.config.port || ''} onChange={(e) => setActiveIntegration(Object.assign(Object.assign({}, activeIntegration), { config: Object.assign(Object.assign({}, activeIntegration.config), { port: parseInt(e.target.value) }) }))} placeholder="389"/>
                       </div>
                     </div>
                     
                     <div className="space-y-2">
                       <Label htmlFor="baseDN">Base DN</Label>
-                      <Input id="baseDN" value={activeIntegration.config.baseDN || ''} onChange={(e) => setActiveIntegration(Object.assign(Object.assign({}, activeIntegration), { config: Object.assign(Object.assign({}, activeIntegration.config), { baseDN: e.target.value }) }))} placeholder="DC=company,DC=com"/>
+                      <Input id="baseDN" title="Base DN" value={activeIntegration.config.baseDN || ''} onChange={(e) => setActiveIntegration(Object.assign(Object.assign({}, activeIntegration), { config: Object.assign(Object.assign({}, activeIntegration.config), { baseDN: e.target.value }) }))} placeholder="DC=company,DC=com"/>
                     </div>
                     
                     <div className="space-y-2">
                       <Label htmlFor="bindDN">Bind DN</Label>
-                      <Input id="bindDN" value={activeIntegration.config.bindDN || ''} onChange={(e) => setActiveIntegration(Object.assign(Object.assign({}, activeIntegration), { config: Object.assign(Object.assign({}, activeIntegration.config), { bindDN: e.target.value }) }))} placeholder="CN=service,DC=company,DC=com"/>
+                      <Input id="bindDN" title="Bind DN" value={activeIntegration.config.bindDN || ''} onChange={(e) => setActiveIntegration(Object.assign(Object.assign({}, activeIntegration), { config: Object.assign(Object.assign({}, activeIntegration.config), { bindDN: e.target.value }) }))} placeholder="CN=service,DC=company,DC=com"/>
                     </div>
                     
                     <div className="space-y-2">
                       <Label htmlFor="bindPassword">Bind Password</Label>
                       <div className="relative">
-                        <Input id="bindPassword" type={showPasswords ? "text" : "password"} value={activeIntegration.config.bindPassword || ''} onChange={(e) => setActiveIntegration(Object.assign(Object.assign({}, activeIntegration), { config: Object.assign(Object.assign({}, activeIntegration.config), { bindPassword: e.target.value }) }))} placeholder="service-account-password"/>
+                        <Input id="bindPassword" title="Bind Password" type={showPasswords ? "text" : "password"} value={activeIntegration.config.bindPassword || ''} onChange={(e) => setActiveIntegration(Object.assign(Object.assign({}, activeIntegration), { config: Object.assign(Object.assign({}, activeIntegration.config), { bindPassword: e.target.value }) }))} placeholder="service-account-password"/>
                         <Button type="button" variant="ghost" size="sm" className="absolute right-0 top-0 h-full px-3 py-2 hover:bg-transparent" onClick={() => setShowPasswords(!showPasswords)}>
                           {showPasswords ? <EyeOff className="h-4 w-4"/> : <Eye className="h-4 w-4"/>}
                         </Button>

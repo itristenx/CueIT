@@ -1,6 +1,14 @@
-import { Injectable, ForbiddenException, BadRequestException } from '@nestjs/common';
+import {
+  Injectable,
+  ForbiddenException,
+  BadRequestException,
+} from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
-import { CreateTicketDto, UpdateTicketDto, CreateCommentDto } from './dto/ticket.dto';
+import {
+  CreateTicketDto,
+  UpdateTicketDto,
+  CreateCommentDto,
+} from './dto/ticket.dto';
 import type { Ticket } from '../../generated/prisma';
 import { TicketStatus, Priority, TicketType } from '../../generated/prisma';
 import { SpamFilterService } from '../security/spam-filter.service';
@@ -14,11 +22,15 @@ export class TicketsService {
     private readonly slaService: SlaService,
   ) {}
 
-  async create(createTicketDto: CreateTicketDto, creatorId: string, userIP?: string): Promise<Ticket> {
+  async create(
+    createTicketDto: CreateTicketDto,
+    creatorId: string,
+    userIP?: string,
+  ): Promise<Ticket> {
     // Get user info for spam filtering
     const user = await this.prisma.user.findUnique({
       where: { id: creatorId },
-      select: { email: true, clerkId: true }
+      select: { email: true, clerkId: true },
     });
 
     if (!user) {
@@ -35,7 +47,9 @@ export class TicketsService {
     });
 
     if (!spamCheck.allowed) {
-      throw new ForbiddenException(`Ticket creation blocked: ${spamCheck.reason}`);
+      throw new ForbiddenException(
+        `Ticket creation blocked: ${spamCheck.reason}`,
+      );
     }
 
     // Generate ticket number with type-based prefix
@@ -44,24 +58,32 @@ export class TicketsService {
     const ticketNumber = `${prefix}-${String(ticketCount).padStart(6, '0')}`;
 
     // Add spam metadata if flagged
-    const metadata = spamCheck.action === 'flag' ? {
-      spamFlags: spamCheck.metadata.contentAnalysis.matchedPatterns,
-      spamScore: spamCheck.metadata.contentAnalysis.spamScore,
-      requiresReview: true,
-    } : undefined;
+    const metadata =
+      spamCheck.action === 'flag'
+        ? {
+            spamFlags: spamCheck.metadata.contentAnalysis.matchedPatterns,
+            spamScore: spamCheck.metadata.contentAnalysis.spamScore,
+            requiresReview: true,
+          }
+        : undefined;
 
     // Calculate SLA breach time
     const slaBreachAt = await this.slaService.calculateSlaBreachTime(
       createTicketDto.priority || 'MEDIUM',
       createTicketDto.type || 'INC',
       createTicketDto.category,
-      new Date()
+      new Date(),
     );
 
     // Calculate undo window expiration if undoSendTimeout is provided
     let undoWindowExpiresAt: Date | undefined = undefined;
-    if (typeof createTicketDto.undoSendTimeout === 'number' && createTicketDto.undoSendTimeout > 0) {
-      undoWindowExpiresAt = new Date(Date.now() + createTicketDto.undoSendTimeout * 1000);
+    if (
+      typeof createTicketDto.undoSendTimeout === 'number' &&
+      createTicketDto.undoSendTimeout > 0
+    ) {
+      undoWindowExpiresAt = new Date(
+        Date.now() + createTicketDto.undoSendTimeout * 1000,
+      );
     }
 
     return this.prisma.ticket.create({
@@ -70,7 +92,9 @@ export class TicketsService {
         ticketNumber,
         creatorId,
         slaBreachAt,
-        dueDate: createTicketDto.dueDate ? new Date(createTicketDto.dueDate) : undefined,
+        dueDate: createTicketDto.dueDate
+          ? new Date(createTicketDto.dueDate)
+          : undefined,
         metadata: metadata ? JSON.stringify(metadata) : undefined,
         // If quarantined, set status to a special state
         status: spamCheck.action === 'quarantine' ? 'PENDING_CUSTOMER' : 'OPEN',
@@ -91,27 +115,38 @@ export class TicketsService {
   /**
    * Cancel (undo) a ticket if within the undo window
    */
-  async cancelTicket(id: string, userId: string): Promise<{ success: boolean; message: string }> {
+  async cancelTicket(
+    id: string,
+    userId: string,
+  ): Promise<{ success: boolean; message: string }> {
     const ticket = await this.prisma.ticket.findUnique({ where: { id } });
     if (!ticket) {
       throw new BadRequestException('Ticket not found');
     }
     if (ticket.creatorId !== userId) {
-      throw new ForbiddenException('Only the ticket creator can undo this ticket');
+      throw new ForbiddenException(
+        'Only the ticket creator can undo this ticket',
+      );
     }
-    if (!ticket.undoWindowExpiresAt || new Date() > ticket.undoWindowExpiresAt) {
+    if (
+      !ticket.undoWindowExpiresAt ||
+      new Date() > ticket.undoWindowExpiresAt
+    ) {
       throw new BadRequestException('Undo window has expired');
     }
     await this.prisma.ticket.delete({ where: { id } });
-    return { success: true, message: 'Ticket successfully undone and deleted.' };
+    return {
+      success: true,
+      message: 'Ticket successfully undone and deleted.',
+    };
   }
 
   async findAll(
-    page: number = 1, 
-    limit: number = 10, 
+    page: number = 1,
+    limit: number = 10,
     status?: TicketStatus,
     userRole?: string,
-    userDepartment?: string
+    userDepartment?: string,
   ): Promise<{
     tickets: Ticket[];
     total: number;
@@ -119,7 +154,7 @@ export class TicketsService {
     limit: number;
   }> {
     const skip = (page - 1) * limit;
-    let where: any = {};
+    const where: any = {};
 
     if (status) {
       where.status = status;
@@ -200,7 +235,11 @@ export class TicketsService {
     });
   }
 
-  async update(id: string, updateTicketDto: UpdateTicketDto, userId: string): Promise<Ticket> {
+  async update(
+    id: string,
+    updateTicketDto: UpdateTicketDto,
+    userId: string,
+  ): Promise<Ticket> {
     const ticket = await this.prisma.ticket.findUnique({ where: { id } });
     if (!ticket) throw new BadRequestException('Ticket not found');
 
@@ -217,7 +256,9 @@ export class TicketsService {
         userId !== ticket.assigneeId &&
         (!user || !privilegedRoles.includes(user.role))
       ) {
-        throw new ForbiddenException('Ticket reassignment is locked. Only the current assignee or admin/lead can reassign.');
+        throw new ForbiddenException(
+          'Ticket reassignment is locked. Only the current assignee or admin/lead can reassign.',
+        );
       }
     }
 
@@ -225,7 +266,9 @@ export class TicketsService {
       where: { id },
       data: {
         ...updateTicketDto,
-        dueDate: updateTicketDto.dueDate ? new Date(updateTicketDto.dueDate) : undefined,
+        dueDate: updateTicketDto.dueDate
+          ? new Date(updateTicketDto.dueDate)
+          : undefined,
       },
       include: {
         creator: true,
@@ -292,7 +335,11 @@ export class TicketsService {
     });
   }
 
-  async addComment(ticketId: string, createCommentDto: CreateCommentDto, authorId: string) {
+  async addComment(
+    ticketId: string,
+    createCommentDto: CreateCommentDto,
+    authorId: string,
+  ) {
     return this.prisma.comment.create({
       data: {
         ...createCommentDto,
@@ -306,9 +353,13 @@ export class TicketsService {
     });
   }
 
-  async getMyTickets(userId: string, type: 'created' | 'assigned' = 'created'): Promise<Ticket[]> {
-    const where = type === 'created' ? { creatorId: userId } : { assigneeId: userId };
-    
+  async getMyTickets(
+    userId: string,
+    type: 'created' | 'assigned' = 'created',
+  ): Promise<Ticket[]> {
+    const where =
+      type === 'created' ? { creatorId: userId } : { assigneeId: userId };
+
     return this.prisma.ticket.findMany({
       where,
       include: {
@@ -346,13 +397,13 @@ export class TicketsService {
    */
   private getTicketPrefix(type: string): string {
     const prefixMap: Record<string, string> = {
-      'INC': 'INC',      // Incident
-      'REQ': 'REQ',      // Request
-      'HR': 'HR',        // HR Request
-      'OP': 'OP',        // Operations Request
-      'TASK': 'TASK',    // Task
-      'CR': 'CR',        // Change Request
-      'PRB': 'PRB',      // Problem
+      INC: 'INC', // Incident
+      REQ: 'REQ', // Request
+      HR: 'HR', // HR Request
+      OP: 'OP', // Operations Request
+      TASK: 'TASK', // Task
+      CR: 'CR', // Change Request
+      PRB: 'PRB', // Problem
     };
 
     return prefixMap[type] || 'INC';
@@ -366,15 +417,15 @@ export class TicketsService {
     const lastTicket = await this.prisma.ticket.findFirst({
       where: {
         ticketNumber: {
-          startsWith: prefix + '-'
-        }
+          startsWith: prefix + '-',
+        },
       },
       orderBy: {
-        ticketNumber: 'desc'
+        ticketNumber: 'desc',
       },
       select: {
-        ticketNumber: true
-      }
+        ticketNumber: true,
+      },
     });
 
     if (lastTicket) {
@@ -408,9 +459,14 @@ export class TicketsService {
       where: { id },
       data: {
         status: 'CLOSED',
-        metadata: ticket.metadata ? 
-          { ...(typeof ticket.metadata === 'object' ? ticket.metadata : {}), archived: true, archivedAt: new Date(), archivedBy: userId } :
-          { archived: true, archivedAt: new Date(), archivedBy: userId },
+        metadata: ticket.metadata
+          ? {
+              ...(typeof ticket.metadata === 'object' ? ticket.metadata : {}),
+              archived: true,
+              archivedAt: new Date(),
+              archivedBy: userId,
+            }
+          : { archived: true, archivedAt: new Date(), archivedBy: userId },
         closedAt: new Date(),
       },
       include: {
@@ -481,15 +537,15 @@ export class TicketsService {
       endDate?: Date;
       assigneeId?: string;
       creatorId?: string;
-    }
+    },
   ): Promise<{ data: any; filename: string; contentType: string }> {
     // Build where clause based on filters
     const where: any = {};
-    
+
     if (filters?.status) {
       where.status = filters.status;
     }
-    
+
     if (filters?.startDate || filters?.endDate) {
       where.createdAt = {};
       if (filters.startDate) {
@@ -499,11 +555,11 @@ export class TicketsService {
         where.createdAt.lte = filters.endDate;
       }
     }
-    
+
     if (filters?.assigneeId) {
       where.assigneeId = filters.assigneeId;
     }
-    
+
     if (filters?.creatorId) {
       where.creatorId = filters.creatorId;
     }
@@ -534,14 +590,14 @@ export class TicketsService {
           filename: `tickets-export-${timestamp}.csv`,
           contentType: 'text/csv',
         };
-      
+
       case 'json':
         return {
           data: JSON.stringify(tickets, null, 2),
           filename: `tickets-export-${timestamp}.json`,
           contentType: 'application/json',
         };
-      
+
       case 'pdf':
         // For now, return as JSON with PDF content type
         // In a real implementation, you'd use a PDF library like puppeteer or pdfkit
@@ -550,7 +606,7 @@ export class TicketsService {
           filename: `tickets-export-${timestamp}.pdf`,
           contentType: 'application/pdf',
         };
-      
+
       default:
         throw new BadRequestException('Unsupported export format');
     }
@@ -576,7 +632,7 @@ export class TicketsService {
       'Closed At',
     ];
 
-    const rows = tickets.map(ticket => [
+    const rows = tickets.map((ticket) => [
       ticket.ticketNumber,
       `"${ticket.title.replace(/"/g, '""')}"`,
       `"${ticket.description.replace(/"/g, '""')}"`,
@@ -585,14 +641,16 @@ export class TicketsService {
       ticket.type,
       ticket.category || '',
       `"${ticket.creator.firstName} ${ticket.creator.lastName}"`,
-      ticket.assignee ? `"${ticket.assignee.firstName} ${ticket.assignee.lastName}"` : '',
+      ticket.assignee
+        ? `"${ticket.assignee.firstName} ${ticket.assignee.lastName}"`
+        : '',
       ticket.createdAt.toISOString(),
       ticket.updatedAt.toISOString(),
       ticket.resolvedAt ? ticket.resolvedAt.toISOString() : '',
       ticket.closedAt ? ticket.closedAt.toISOString() : '',
     ]);
 
-    return [headers.join(','), ...rows.map(row => row.join(','))].join('\n');
+    return [headers.join(','), ...rows.map((row) => row.join(','))].join('\n');
   }
 
   /**
@@ -601,7 +659,7 @@ export class TicketsService {
   private generateSimplePDFContent(tickets: any[]): string {
     const content = [
       'NOVA UNIVERSE - TICKETS EXPORT REPORT',
-      '=' .repeat(50),
+      '='.repeat(50),
       `Generated: ${new Date().toLocaleString()}`,
       `Total Tickets: ${tickets.length}`,
       '',
@@ -612,8 +670,12 @@ export class TicketsService {
       content.push(`   Title: ${ticket.title}`);
       content.push(`   Status: ${ticket.status}`);
       content.push(`   Priority: ${ticket.priority}`);
-      content.push(`   Creator: ${ticket.creator.firstName} ${ticket.creator.lastName}`);
-      content.push(`   Assignee: ${ticket.assignee ? `${ticket.assignee.firstName} ${ticket.assignee.lastName}` : 'Unassigned'}`);
+      content.push(
+        `   Creator: ${ticket.creator.firstName} ${ticket.creator.lastName}`,
+      );
+      content.push(
+        `   Assignee: ${ticket.assignee ? `${ticket.assignee.firstName} ${ticket.assignee.lastName}` : 'Unassigned'}`,
+      );
       content.push(`   Created: ${ticket.createdAt.toLocaleDateString()}`);
       content.push('');
     });
@@ -624,9 +686,15 @@ export class TicketsService {
   /**
    * Merge multiple tickets into a target ticket
    */
-  async mergeTickets(targetTicketId: string, sourceTicketIds: string[], userId: string): Promise<Ticket> {
+  async mergeTickets(
+    targetTicketId: string,
+    sourceTicketIds: string[],
+    userId: string,
+  ): Promise<Ticket> {
     if (sourceTicketIds.includes(targetTicketId)) {
-      throw new BadRequestException('Target ticket cannot be in the source list');
+      throw new BadRequestException(
+        'Target ticket cannot be in the source list',
+      );
     }
 
     // Get all tickets
@@ -664,7 +732,7 @@ export class TicketsService {
       for (const sourceTicket of sourceTickets) {
         if (sourceTicket.comments.length > 0) {
           await prisma.comment.createMany({
-            data: sourceTicket.comments.map(comment => ({
+            data: sourceTicket.comments.map((comment) => ({
               content: `[Merged from ${sourceTicket.ticketNumber}] ${comment.content}`,
               ticketId: targetTicketId,
               authorId: comment.authorId,
@@ -701,8 +769,10 @@ export class TicketsService {
 
       // Update target ticket metadata
       const currentMetadata: any = targetTicket.metadata || {};
-      const mergedTickets = Array.isArray(currentMetadata.mergedTickets) ? currentMetadata.mergedTickets : [];
-      
+      const mergedTickets = Array.isArray(currentMetadata.mergedTickets)
+        ? currentMetadata.mergedTickets
+        : [];
+
       const updatedTicket = await prisma.ticket.update({
         where: { id: targetTicketId },
         data: {
@@ -710,7 +780,7 @@ export class TicketsService {
             ...currentMetadata,
             mergedTickets: [
               ...mergedTickets,
-              ...sourceTickets.map(t => ({
+              ...sourceTickets.map((t) => ({
                 ticketId: t.id,
                 ticketNumber: t.ticketNumber,
                 title: t.title,
@@ -748,7 +818,7 @@ export class TicketsService {
       category?: string;
     },
     commentIdsToMove: string[],
-    userId: string
+    userId: string,
   ): Promise<{ original: Ticket; split: Ticket }> {
     const originalTicket = await this.prisma.ticket.findUnique({
       where: { id: originalTicketId },
@@ -827,7 +897,9 @@ export class TicketsService {
 
       // Update original ticket metadata
       const originalMetadata: any = originalTicket.metadata || {};
-      const splitTickets = Array.isArray(originalMetadata.splitTickets) ? originalMetadata.splitTickets : [];
+      const splitTickets = Array.isArray(originalMetadata.splitTickets)
+        ? originalMetadata.splitTickets
+        : [];
 
       const updatedOriginal = await prisma.ticket.update({
         where: { id: originalTicketId },

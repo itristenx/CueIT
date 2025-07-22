@@ -11,19 +11,28 @@ export class WorkflowController {
 
   @Post('ticket/:id/apply')
   @ApiOperation({ summary: 'Apply workflow rules to a ticket' })
-  @ApiResponse({ status: 200, description: 'Workflow rules applied successfully' })
+  @ApiResponse({
+    status: 200,
+    description: 'Workflow rules applied successfully',
+  })
   async applyWorkflowRules(
     @Param('id') ticketId: string,
-    @Body() data: {
+    @Body()
+    data: {
       trigger: 'created' | 'updated' | 'assigned' | 'commented';
-    }
+    },
   ) {
     return this.workflowService.applyWorkflowRules(ticketId, data.trigger);
   }
 
   @Post('escalations/process')
-  @ApiOperation({ summary: 'Process automatic escalations for overdue tickets' })
-  @ApiResponse({ status: 200, description: 'Escalations processed successfully' })
+  @ApiOperation({
+    summary: 'Process automatic escalations for overdue tickets',
+  })
+  @ApiResponse({
+    status: 200,
+    description: 'Escalations processed successfully',
+  })
   async processEscalations() {
     return this.workflowService.processEscalations();
   }

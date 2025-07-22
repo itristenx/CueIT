@@ -15,12 +15,28 @@ export interface WorkflowRule {
 
 export interface WorkflowCondition {
   field: string; // e.g., 'priority', 'type', 'category', 'status', 'creator.department'
-  operator: 'equals' | 'not_equals' | 'contains' | 'not_contains' | 'in' | 'not_in' | 'greater_than' | 'less_than';
+  operator:
+    | 'equals'
+    | 'not_equals'
+    | 'contains'
+    | 'not_contains'
+    | 'in'
+    | 'not_in'
+    | 'greater_than'
+    | 'less_than';
   value: any;
 }
 
 export interface WorkflowAction {
-  type: 'assign' | 'set_priority' | 'set_status' | 'add_tag' | 'remove_tag' | 'notify' | 'escalate' | 'create_task';
+  type:
+    | 'assign'
+    | 'set_priority'
+    | 'set_status'
+    | 'add_tag'
+    | 'remove_tag'
+    | 'notify'
+    | 'escalate'
+    | 'create_task';
   parameters: Record<string, any>;
 }
 
@@ -34,7 +50,10 @@ export class WorkflowService {
   /**
    * Apply workflow rules to a ticket
    */
-  async applyWorkflowRules(ticketId: string, trigger: 'created' | 'updated' | 'assigned' | 'commented'): Promise<{
+  async applyWorkflowRules(
+    ticketId: string,
+    trigger: 'created' | 'updated' | 'assigned' | 'commented',
+  ): Promise<{
     rulesApplied: string[];
     actionsExecuted: WorkflowAction[];
   }> {
@@ -61,16 +80,19 @@ export class WorkflowService {
       if (!rule.enabled) continue;
 
       const meetsConditions = this.evaluateConditions(rule.conditions, ticket);
-      
+
       if (meetsConditions) {
         rulesApplied.push(rule.id);
-        
+
         for (const action of rule.actions) {
           try {
             await this.executeAction(action, ticket);
             actionsExecuted.push(action);
           } catch (error) {
-            console.error(`Failed to execute workflow action ${action.type}:`, error);
+            console.error(
+              `Failed to execute workflow action ${action.type}:`,
+              error,
+            );
           }
         }
       }
@@ -204,35 +226,48 @@ export class WorkflowService {
   /**
    * Evaluate if ticket meets workflow conditions
    */
-  private evaluateConditions(conditions: WorkflowCondition[], ticket: any): boolean {
-    return conditions.every(condition => {
+  private evaluateConditions(
+    conditions: WorkflowCondition[],
+    ticket: any,
+  ): boolean {
+    return conditions.every((condition) => {
       const fieldValue = this.getFieldValue(condition.field, ticket);
-      
+
       switch (condition.operator) {
         case 'equals':
           return fieldValue === condition.value;
-        
+
         case 'not_equals':
           return fieldValue !== condition.value;
-        
+
         case 'contains':
-          return String(fieldValue).toLowerCase().includes(String(condition.value).toLowerCase());
-        
+          return String(fieldValue)
+            .toLowerCase()
+            .includes(String(condition.value).toLowerCase());
+
         case 'not_contains':
-          return !String(fieldValue).toLowerCase().includes(String(condition.value).toLowerCase());
-        
+          return !String(fieldValue)
+            .toLowerCase()
+            .includes(String(condition.value).toLowerCase());
+
         case 'in':
-          return Array.isArray(condition.value) && condition.value.includes(fieldValue);
-        
+          return (
+            Array.isArray(condition.value) &&
+            condition.value.includes(fieldValue)
+          );
+
         case 'not_in':
-          return !Array.isArray(condition.value) || !condition.value.includes(fieldValue);
-        
+          return (
+            !Array.isArray(condition.value) ||
+            !condition.value.includes(fieldValue)
+          );
+
         case 'greater_than':
           return Number(fieldValue) > Number(condition.value);
-        
+
         case 'less_than':
           return Number(fieldValue) < Number(condition.value);
-        
+
         default:
           return false;
       }
@@ -245,47 +280,50 @@ export class WorkflowService {
   private getFieldValue(field: string, ticket: any): any {
     const parts = field.split('.');
     let value = ticket;
-    
+
     for (const part of parts) {
       value = value?.[part];
     }
-    
+
     return value;
   }
 
   /**
    * Execute a workflow action
    */
-  private async executeAction(action: WorkflowAction, ticket: any): Promise<void> {
+  private async executeAction(
+    action: WorkflowAction,
+    ticket: any,
+  ): Promise<void> {
     switch (action.type) {
       case 'assign':
         await this.executeAssignAction(action.parameters, ticket);
         break;
-      
+
       case 'set_priority':
         await this.executeSetPriorityAction(action.parameters, ticket);
         break;
-      
+
       case 'set_status':
         await this.executeSetStatusAction(action.parameters, ticket);
         break;
-      
+
       case 'add_tag':
         await this.executeAddTagAction(action.parameters, ticket);
         break;
-      
+
       case 'remove_tag':
         await this.executeRemoveTagAction(action.parameters, ticket);
         break;
-      
+
       case 'notify':
         await this.executeNotifyAction(action.parameters, ticket);
         break;
-      
+
       case 'escalate':
         await this.executeEscalateAction(action.parameters, ticket);
         break;
-      
+
       default:
         console.warn(`Unknown workflow action type: ${action.type}`);
     }
@@ -294,7 +332,10 @@ export class WorkflowService {
   /**
    * Execute assignment action
    */
-  private async executeAssignAction(parameters: any, ticket: any): Promise<void> {
+  private async executeAssignAction(
+    parameters: any,
+    ticket: any,
+  ): Promise<void> {
     let assigneeId: string | null = null;
 
     if (parameters.assigneeId) {
@@ -318,7 +359,10 @@ export class WorkflowService {
   /**
    * Execute set priority action
    */
-  private async executeSetPriorityAction(parameters: any, ticket: any): Promise<void> {
+  private async executeSetPriorityAction(
+    parameters: any,
+    ticket: any,
+  ): Promise<void> {
     await this.prisma.ticket.update({
       where: { id: ticket.id },
       data: { priority: parameters.priority },
@@ -328,7 +372,10 @@ export class WorkflowService {
   /**
    * Execute set status action
    */
-  private async executeSetStatusAction(parameters: any, ticket: any): Promise<void> {
+  private async executeSetStatusAction(
+    parameters: any,
+    ticket: any,
+  ): Promise<void> {
     await this.prisma.ticket.update({
       where: { id: ticket.id },
       data: { status: parameters.status },
@@ -338,10 +385,13 @@ export class WorkflowService {
   /**
    * Execute add tag action
    */
-  private async executeAddTagAction(parameters: any, ticket: any): Promise<void> {
+  private async executeAddTagAction(
+    parameters: any,
+    ticket: any,
+  ): Promise<void> {
     const currentTags = ticket.tags || [];
     const newTags = [...new Set([...currentTags, ...parameters.tags])];
-    
+
     await this.prisma.ticket.update({
       where: { id: ticket.id },
       data: { tags: newTags },
@@ -351,10 +401,15 @@ export class WorkflowService {
   /**
    * Execute remove tag action
    */
-  private async executeRemoveTagAction(parameters: any, ticket: any): Promise<void> {
+  private async executeRemoveTagAction(
+    parameters: any,
+    ticket: any,
+  ): Promise<void> {
     const currentTags = ticket.tags || [];
-    const newTags = currentTags.filter((tag: string) => !parameters.tags.includes(tag));
-    
+    const newTags = currentTags.filter(
+      (tag: string) => !parameters.tags.includes(tag),
+    );
+
     await this.prisma.ticket.update({
       where: { id: ticket.id },
       data: { tags: newTags },
@@ -364,13 +419,16 @@ export class WorkflowService {
   /**
    * Execute notify action
    */
-  private async executeNotifyAction(parameters: any, ticket: any): Promise<void> {
+  private async executeNotifyAction(
+    parameters: any,
+    ticket: any,
+  ): Promise<void> {
     if (parameters.type && ticket.creatorId) {
       await this.notificationsService.sendTicketNotification(
         parameters.type,
         ticket.id,
         ticket.creatorId,
-        parameters.additionalData || {}
+        parameters.additionalData || {},
       );
     }
   }
@@ -378,7 +436,10 @@ export class WorkflowService {
   /**
    * Execute escalate action
    */
-  private async executeEscalateAction(parameters: any, ticket: any): Promise<void> {
+  private async executeEscalateAction(
+    parameters: any,
+    ticket: any,
+  ): Promise<void> {
     // Mark ticket as escalated
     const currentMetadata = ticket.metadata || {};
     const metadata = {
@@ -432,25 +493,31 @@ export class WorkflowService {
 
     for (const ticket of overdueTickets) {
       const metadata: any = ticket.metadata || {};
-      
+
       if (!metadata.escalated) {
         // First escalation
-        await this.executeEscalateAction({
-          newPriority: this.getEscalatedPriority(ticket.priority),
-          recipients: ['support-lead@company.com'],
-        }, ticket);
-        
+        await this.executeEscalateAction(
+          {
+            newPriority: this.getEscalatedPriority(ticket.priority),
+            recipients: ['support-lead@company.com'],
+          },
+          ticket,
+        );
+
         escalated.push(ticket.id);
       } else if (metadata.escalationLevel < 3) {
         // Further escalations
         const escalationLevel = metadata.escalationLevel + 1;
         const recipients = this.getEscalationRecipients(escalationLevel);
-        
-        await this.executeEscalateAction({
-          newPriority: this.getEscalatedPriority(ticket.priority),
-          recipients,
-        }, ticket);
-        
+
+        await this.executeEscalateAction(
+          {
+            newPriority: this.getEscalatedPriority(ticket.priority),
+            recipients,
+          },
+          ticket,
+        );
+
         escalated.push(ticket.id);
       }
     }
@@ -466,10 +533,10 @@ export class WorkflowService {
    */
   private getEscalatedPriority(currentPriority: Priority): Priority {
     const escalationMap: Record<Priority, Priority> = {
-      'LOW': 'MEDIUM',
-      'MEDIUM': 'HIGH',
-      'HIGH': 'URGENT',
-      'URGENT': 'URGENT', // Already at max
+      LOW: 'MEDIUM',
+      MEDIUM: 'HIGH',
+      HIGH: 'URGENT',
+      URGENT: 'URGENT', // Already at max
     };
 
     return escalationMap[currentPriority] || 'HIGH';

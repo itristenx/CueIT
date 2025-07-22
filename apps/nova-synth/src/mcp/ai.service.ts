@@ -1,5 +1,6 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
+import { EnhancedAiService } from './enhanced-ai.service';
 
 interface AiResponse {
   reply: string;
@@ -15,7 +16,10 @@ interface AiResponse {
 export class AiService {
   private readonly logger = new Logger(AiService.name);
 
-  constructor(private readonly configService: ConfigService) {}
+  constructor(
+    private readonly configService: ConfigService,
+    private readonly enhancedAiService: EnhancedAiService,
+  ) {}
 
   async processMessage(
     message: string,
@@ -25,16 +29,32 @@ export class AiService {
     this.logger.debug(`Processing AI message: ${message}`);
 
     try {
-      // For now, implement a simple rule-based response system
-      // TODO: Integrate with OpenAI GPT or other LLM providers
-      const response = await this.generateResponse(message, context, availableTools);
-      
-      return response;
-    } catch (error) {
-      this.logger.error(`Error in AI processing: ${error.message}`, error.stack);
-      
+      // Use the enhanced AI service that supports both native and MCP AI
+      const enhancedResponse = await this.enhancedAiService.processMessage(
+        message,
+        context,
+        availableTools,
+        {
+          requireCapabilities: ['chat'],
+          maxResponseTime: 10000,
+        },
+      );
+
+      // Convert enhanced response to legacy format for backward compatibility
       return {
-        reply: "I'm having trouble understanding your request. Could you please rephrase it?",
+        reply: enhancedResponse.reply,
+        actions: enhancedResponse.actions,
+        context: enhancedResponse.context,
+      };
+    } catch (error) {
+      this.logger.error(
+        `Error in AI processing: ${error.message}`,
+        error.stack,
+      );
+
+      return {
+        reply:
+          "I'm having trouble understanding your request. Could you please rephrase it?",
         actions: [],
         context: { error: true },
       };
@@ -59,7 +79,11 @@ export class AiService {
       };
     }
 
-    if (lowerMessage.includes('ticket') || lowerMessage.includes('issue') || lowerMessage.includes('problem')) {
+    if (
+      lowerMessage.includes('ticket') ||
+      lowerMessage.includes('issue') ||
+      lowerMessage.includes('problem')
+    ) {
       return {
         reply: `I can help you create a ticket for that issue. What seems to be the problem?`,
         actions: [
@@ -69,7 +93,11 @@ export class AiService {
       };
     }
 
-    if (lowerMessage.includes('knowledge') || lowerMessage.includes('how to') || lowerMessage.includes('help')) {
+    if (
+      lowerMessage.includes('knowledge') ||
+      lowerMessage.includes('how to') ||
+      lowerMessage.includes('help')
+    ) {
       return {
         reply: `Let me search our knowledge base for information that might help you.`,
         actions: [
@@ -79,7 +107,11 @@ export class AiService {
       };
     }
 
-    if (lowerMessage.includes('status') || lowerMessage.includes('account') || lowerMessage.includes('profile')) {
+    if (
+      lowerMessage.includes('status') ||
+      lowerMessage.includes('account') ||
+      lowerMessage.includes('profile')
+    ) {
       return {
         reply: `I can show you your account status and recent activity. Here's what I found:`,
         actions: [
@@ -104,12 +136,12 @@ export class AiService {
     return {
       name: 'Cosmo',
       personality: 'friendly, helpful, occasionally playful',
-      tagline: 'Hey, I\'m Cosmo. Need a hand?',
+      tagline: "Hey, I'm Cosmo. Need a hand?",
       tone: 'casual but respectful',
       characteristics: [
         'Helpful and curious',
         'Occasionally witty',
-        'Aligned with Nova\'s space-themed voice',
+        "Aligned with Nova's space-themed voice",
         'Supportive and encouraging',
       ],
     };
@@ -117,7 +149,7 @@ export class AiService {
 
   async generateSystemPrompt(context: any): Promise<string> {
     const personality = await this.getPersonality();
-    
+
     return `You are ${personality.name}, the AI assistant for Nova Universe ITSM platform.
 
 Personality: ${personality.personality}

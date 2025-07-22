@@ -163,7 +163,7 @@ export default function UsersPage() {
       <div className="flex items-center space-x-4">
         <div className="relative flex-1 max-w-sm">
           <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400"/>
-          <Input placeholder="Search users..." value={searchTerm} onChange={(e) => setSearchTerm(e.target.value)} className="pl-10"/>
+          <Input placeholder="Search users" value={searchTerm} onChange={(e) => setSearchTerm(e.target.value)} className="pl-10" title="User Search"/>
         </div>
         <Select defaultValue="all">
           <SelectTrigger className="w-[180px]">
@@ -353,6 +353,7 @@ function UserForm({ user, onSubmit, onCancel }) {
       </div>
 
       <div className="flex items-center space-x-2">
+        <label htmlFor="isAdmin" className="sr-only">System Administrator</label>
         <input type="checkbox" id="isAdmin" checked={formData.isAdmin} onChange={(e) => setFormData(Object.assign(Object.assign({}, formData), { isAdmin: e.target.checked }))} className="rounded border-gray-300 text-blue-600 focus:ring-blue-500"/>
         <Label htmlFor="isAdmin">System Administrator</Label>
       </div>

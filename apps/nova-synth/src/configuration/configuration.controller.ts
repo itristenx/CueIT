@@ -1,10 +1,4 @@
-import {
-  Controller,
-  Get,
-  Put,
-  Body,
-  UseGuards,
-} from '@nestjs/common';
+import { Controller, Get, Put, Body, UseGuards } from '@nestjs/common';
 import { ConfigurationService } from './configuration.service';
 import { ClerkAuthGuard } from '../auth/clerk-auth.guard';
 

@@ -354,7 +354,7 @@ export default function KnowledgeBasePage() {
         <div className="flex items-center space-x-4">
           <div className="flex-1 relative">
             <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400"/>
-            <Input placeholder="Search articles..." value={searchTerm} onChange={(e) => setSearchTerm(e.target.value)} className="pl-10"/>
+            <Input placeholder="Search knowledge base" value={searchTerm} onChange={(e) => setSearchTerm(e.target.value)} className="pl-10" title="Knowledge Base Search"/>
           </div>
           <Select value={statusFilter} onValueChange={setStatusFilter}>
             <SelectTrigger className="w-40">
@@ -562,6 +562,7 @@ export default function KnowledgeBasePage() {
                   </div>)}
                 
                 <div className="flex items-center space-x-2">
+                  <label htmlFor="featured" className="sr-only">Featured article</label>
                   <input type="checkbox" id="featured" checked={articleForm.featured} onChange={(e) => setArticleForm(Object.assign(Object.assign({}, articleForm), { featured: e.target.checked }))} className="rounded border-gray-300"/>
                   <Label htmlFor="featured">Featured article</Label>
                 </div>

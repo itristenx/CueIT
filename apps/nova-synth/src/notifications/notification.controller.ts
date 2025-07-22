@@ -1,4 +1,12 @@
-import { Controller, Get, Post, Body, Param, Query, UseGuards } from '@nestjs/common';
+import {
+  Controller,
+  Get,
+  Post,
+  Body,
+  Param,
+  Query,
+  UseGuards,
+} from '@nestjs/common';
 import { ApiTags, ApiOperation, ApiResponse } from '@nestjs/swagger';
 import { NotificationService, NotificationData } from './notification.service';
 
@@ -37,16 +45,17 @@ export class NotificationController {
     // Return list of available templates
     const templateIds = ['ticket-created', 'ticket-updated', 'ticket-resolved'];
     const templates = await Promise.all(
-      templateIds.map(id => this.notificationService.getEmailTemplate(id))
+      templateIds.map((id) => this.notificationService.getEmailTemplate(id)),
     );
-    return templates.filter(template => template !== null);
+    return templates.filter((template) => template !== null);
   }
 
   @Get('templates/:templateId')
   @ApiOperation({ summary: 'Get specific email template' })
   @ApiResponse({ status: 200, description: 'Template retrieved successfully' })
   async getTemplate(@Param('templateId') templateId: string) {
-    const template = await this.notificationService.getEmailTemplate(templateId);
+    const template =
+      await this.notificationService.getEmailTemplate(templateId);
     if (!template) {
       throw new Error('Template not found');
     }
@@ -57,7 +66,8 @@ export class NotificationController {
   @ApiOperation({ summary: 'Create email template' })
   @ApiResponse({ status: 201, description: 'Template created successfully' })
   async createTemplate(
-    @Body() templateData: {
+    @Body()
+    templateData: {
       name: string;
       subject: string;
       htmlContent: string;
@@ -75,7 +85,9 @@ export class NotificationController {
     const isConnected = await this.notificationService.testEmailConnection();
     return {
       connected: isConnected,
-      message: isConnected ? 'SMTP connection successful' : 'SMTP connection failed',
+      message: isConnected
+        ? 'SMTP connection successful'
+        : 'SMTP connection failed',
     };
   }
 

@@ -8,7 +8,7 @@ export class AppController {
   constructor(
     private readonly appService: AppService,
     private readonly serverService: ServerService,
-    private readonly configurationService: ConfigurationService
+    private readonly configurationService: ConfigurationService,
   ) {}
 
   @Get()
@@ -56,7 +56,7 @@ export class AppController {
   @Version('2')
   async getHealthV2() {
     return {
-      ...await this.serverService.getHealthStatus(),
+      ...(await this.serverService.getHealthStatus()),
       version: '2.0.0',
       apiVersion: 'v2',
     };
@@ -66,7 +66,7 @@ export class AppController {
   @Version('2')
   async getServerInfoV2() {
     return {
-      ...await this.serverService.getServerInfo(),
+      ...(await this.serverService.getServerInfo()),
       version: '2.0.0',
       apiVersion: 'v2',
     };
@@ -93,7 +93,7 @@ export class AppController {
   @Version('2')
   async getStatusConfigV2() {
     return {
-      ...await this.configurationService.getStatusConfig(),
+      ...(await this.configurationService.getStatusConfig()),
       version: '2.0.0',
       apiVersion: 'v2',
     };

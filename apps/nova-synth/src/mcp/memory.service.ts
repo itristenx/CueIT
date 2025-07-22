@@ -26,9 +26,12 @@ export class MemoryService {
 
   constructor(private readonly prisma: PrismaService) {}
 
-  async getConversationContext(userId: string, module: string): Promise<ConversationContext> {
+  async getConversationContext(
+    userId: string,
+    module: string,
+  ): Promise<ConversationContext> {
     const cacheKey = `${userId}:${module}`;
-    
+
     // Check cache first
     if (this.conversationCache.has(cacheKey)) {
       const cached = this.conversationCache.get(cacheKey);
@@ -54,13 +57,17 @@ export class MemoryService {
       const context: ConversationContext = {
         userId,
         module,
-        history: conversations.map(conv => ({
+        history: conversations.map((conv) => ({
           id: conv.id,
           userId: conv.userId,
           module: conv.module,
           message: conv.message,
           response: conv.response,
-          actions: Array.isArray(conv.actions) ? conv.actions : (conv.actions ? [conv.actions] : []),
+          actions: Array.isArray(conv.actions)
+            ? conv.actions
+            : conv.actions
+              ? [conv.actions]
+              : [],
           timestamp: conv.timestamp,
         })),
         lastUpdated: new Date(),
@@ -68,11 +75,14 @@ export class MemoryService {
 
       // Cache the context
       this.conversationCache.set(cacheKey, context);
-      
+
       return context;
     } catch (error) {
-      this.logger.error(`Error loading conversation context: ${error.message}`, error.stack);
-      
+      this.logger.error(
+        `Error loading conversation context: ${error.message}`,
+        error.stack,
+      );
+
       // Return empty context on error
       return {
         userId,
@@ -100,13 +110,18 @@ export class MemoryService {
           response,
           actions,
           timestamp: new Date(),
+          topic: 'AI Conversation',
+          messages: JSON.stringify([
+            { role: 'user', content: message },
+            { role: 'assistant', content: response },
+          ]),
         },
       });
 
       // Update cache
       const cacheKey = `${userId}:${module}`;
       const context = this.conversationCache.get(cacheKey);
-      
+
       if (context) {
         context.history.unshift({
           id: `temp-${Date.now()}`,
@@ -127,13 +142,21 @@ export class MemoryService {
         this.conversationCache.set(cacheKey, context);
       }
 
-      this.logger.debug(`Stored conversation for user ${userId} in module ${module}`);
+      this.logger.debug(
+        `Stored conversation for user ${userId} in module ${module}`,
+      );
     } catch (error) {
-      this.logger.error(`Error storing conversation: ${error.message}`, error.stack);
+      this.logger.error(
+        `Error storing conversation: ${error.message}`,
+        error.stack,
+      );
     }
   }
 
-  async clearConversationHistory(userId: string, module?: string): Promise<void> {
+  async clearConversationHistory(
+    userId: string,
+    module?: string,
+  ): Promise<void> {
     try {
       if (module) {
         await this.prisma.conversation.deleteMany({
@@ -142,7 +165,7 @@ export class MemoryService {
             module,
           },
         });
-        
+
         // Clear cache
         const cacheKey = `${userId}:${module}`;
         this.conversationCache.delete(cacheKey);
@@ -152,7 +175,7 @@ export class MemoryService {
             userId,
           },
         });
-        
+
         // Clear all cache entries for this user
         for (const key of this.conversationCache.keys()) {
           if (key.startsWith(`${userId}:`)) {
@@ -161,9 +184,14 @@ export class MemoryService {
         }
       }
 
-      this.logger.debug(`Cleared conversation history for user ${userId}${module ? ` in module ${module}` : ''}`);
+      this.logger.debug(
+        `Cleared conversation history for user ${userId}${module ? ` in module ${module}` : ''}`,
+      );
     } catch (error) {
-      this.logger.error(`Error clearing conversation history: ${error.message}`, error.stack);
+      this.logger.error(
+        `Error clearing conversation history: ${error.message}`,
+        error.stack,
+      );
     }
   }
 
@@ -181,14 +209,20 @@ export class MemoryService {
 
       return {
         userId,
-        totalConversations: stats.reduce((sum, stat) => sum + stat._count.id, 0),
-        moduleStats: stats.map(stat => ({
+        totalConversations: stats.reduce(
+          (sum, stat) => sum + stat._count.id,
+          0,
+        ),
+        moduleStats: stats.map((stat) => ({
           module: stat.module,
           conversationCount: stat._count.id,
         })),
       };
-    } catch (error) {
-      this.logger.error(`Error getting user memory stats: ${error.message}`, error.stack);
+    } catch (error: any) {
+      this.logger.error(
+        `Error getting user memory stats: ${error.message}`,
+        error.stack,
+      );
       return {
         userId,
         totalConversations: 0,
@@ -210,12 +244,17 @@ export class MemoryService {
         },
       });
 
-      this.logger.log(`Cleaned up ${result.count} old conversations older than ${daysToKeep} days`);
-      
+      this.logger.log(
+        `Cleaned up ${result.count} old conversations older than ${daysToKeep} days`,
+      );
+
       // Clear cache to force reload
       this.conversationCache.clear();
-    } catch (error) {
-      this.logger.error(`Error cleaning up old conversations: ${error.message}`, error.stack);
+    } catch (error: any) {
+      this.logger.error(
+        `Error cleaning up old conversations: ${error.message}`,
+        error.stack,
+      );
     }
   }
 }

@@ -304,6 +304,9 @@ export default function NotificationsPage() {
                 <CardTitle>Recent Notifications</CardTitle>
               </CardHeader>
               <CardContent>
+                <div className="mb-4">
+                  <Input type="text" title="Notification Filter" placeholder="Filter notifications" className="w-full max-w-sm"/>
+                </div>
                 <Table>
                   <TableHeader>
                     <TableRow>
@@ -435,21 +438,21 @@ export default function NotificationsPage() {
                       <Label>Email Notifications</Label>
                       <p className="text-sm text-muted-foreground">Send notifications via email</p>
                     </div>
-                    <input type="checkbox" defaultChecked className="rounded border-gray-300"/>
+                    <input type="checkbox" defaultChecked className="rounded border-gray-300" aria-label="Email Notifications" title="Email Notifications"/>
                   </div>
                   <div className="flex items-center justify-between">
                     <div>
                       <Label>Slack Notifications</Label>
                       <p className="text-sm text-muted-foreground">Send notifications to Slack</p>
                     </div>
-                    <input type="checkbox" defaultChecked className="rounded border-gray-300"/>
+                    <input type="checkbox" defaultChecked className="rounded border-gray-300" aria-label="Slack Notifications" title="Slack Notifications"/>
                   </div>
                   <div className="flex items-center justify-between">
                     <div>
                       <Label>System Notifications</Label>
                       <p className="text-sm text-muted-foreground">Show in-app notifications</p>
                     </div>
-                    <input type="checkbox" defaultChecked className="rounded border-gray-300"/>
+                    <input type="checkbox" defaultChecked className="rounded border-gray-300" aria-label="System Notifications" title="System Notifications"/>
                   </div>
                 </div>
               </CardContent>
@@ -465,12 +468,12 @@ export default function NotificationsPage() {
               <CardContent className="space-y-4">
                 <div className="space-y-2">
                   <Label htmlFor="title">Title</Label>
-                  <Input id="title" value={composer.title} onChange={(e) => setComposer(Object.assign(Object.assign({}, composer), { title: e.target.value }))} placeholder="Notification title"/>
+                  <Input id="title" value={composer.title} onChange={(e) => setComposer(Object.assign(Object.assign({}, composer), { title: e.target.value }))} placeholder="Notification title" title="Notification Title"/>
                 </div>
                 
                 <div className="space-y-2">
                   <Label htmlFor="message">Message</Label>
-                  <Textarea id="message" value={composer.message} onChange={(e) => setComposer(Object.assign(Object.assign({}, composer), { message: e.target.value }))} placeholder="Notification message" rows={4}/>
+                  <Textarea id="message" value={composer.message} onChange={(e) => setComposer(Object.assign(Object.assign({}, composer), { message: e.target.value }))} placeholder="Notification message" rows={4} title="Notification Message"/>
                 </div>
                 
                 <div className="grid gap-4 md:grid-cols-2">
@@ -506,13 +509,14 @@ export default function NotificationsPage() {
                 </div>
                 
                 <div className="flex items-center space-x-2">
+                  <label htmlFor="schedule" className="sr-only">Schedule for later</label>
                   <input type="checkbox" id="schedule" checked={composer.schedule} onChange={(e) => setComposer(Object.assign(Object.assign({}, composer), { schedule: e.target.checked }))} className="rounded border-gray-300"/>
                   <Label htmlFor="schedule">Schedule for later</Label>
                 </div>
                 
                 {composer.schedule && (<div className="space-y-2">
                     <Label htmlFor="scheduledAt">Scheduled Time</Label>
-                    <Input id="scheduledAt" type="datetime-local" value={composer.scheduledAt} onChange={(e) => setComposer(Object.assign(Object.assign({}, composer), { scheduledAt: e.target.value }))}/>
+                    <Input id="scheduledAt" type="datetime-local" value={composer.scheduledAt} onChange={(e) => setComposer(Object.assign(Object.assign({}, composer), { scheduledAt: e.target.value }))} title="Scheduled Time"/>
                   </div>)}
                 
                 <div className="flex items-center justify-end space-x-2 pt-4">

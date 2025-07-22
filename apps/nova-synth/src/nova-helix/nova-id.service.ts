@@ -24,7 +24,7 @@ export class NovaIdService {
   async createNovaId(userData: Partial<NovaIdUser>): Promise<string> {
     // Generate unique Nova ID
     const novaId = this.generateNovaId();
-    
+
     // Create user with Nova ID
     await this.prisma.user.create({
       data: {
@@ -32,7 +32,7 @@ export class NovaIdService {
         firstName: userData.firstName!,
         lastName: userData.lastName!,
         clerkId: userData.email || novaId, // Temporary mapping
-        role: userData.role as any || 'END_USER',
+        role: (userData.role as any) || 'END_USER',
         department: userData.department || null,
         title: userData.title || null,
       },
@@ -68,7 +68,11 @@ export class NovaIdService {
     };
   }
 
-  async updateNovaAscendProgress(novaId: string, xpGained: number, stardustGained: number) {
+  async updateNovaAscendProgress(
+    novaId: string,
+    xpGained: number,
+    stardustGained: number,
+  ) {
     // Update XP in the UserXP table
     return await this.prisma.userXP.upsert({
       where: { userId: novaId },

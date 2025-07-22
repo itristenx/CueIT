@@ -23,10 +23,13 @@ export class ScimService {
       },
     });
 
-    const configMap = configs.reduce((acc, config) => {
-      acc[config.key] = config.value;
-      return acc;
-    }, {} as Record<string, string>);
+    const configMap = configs.reduce(
+      (acc, config) => {
+        acc[config.key] = config.value;
+        return acc;
+      },
+      {} as Record<string, string>,
+    );
 
     return {
       enabled: configMap.scimEnabled === 'true',
@@ -42,7 +45,7 @@ export class ScimService {
   async updateScimConfig(updates: any) {
     // Update SCIM configuration in database
     const flatUpdates = this.flattenScimConfig(updates);
-    
+
     for (const [key, value] of Object.entries(flatUpdates)) {
       await this.prisma.configuration.upsert({
         where: { key },
@@ -60,8 +63,14 @@ export class ScimService {
       data: {
         clerkId: userData.externalId || userData.id,
         email: userData.userName,
-        firstName: userData.name?.givenName || userData.displayName?.split(' ')[0] || userData.userName,
-        lastName: userData.name?.familyName || userData.displayName?.split(' ')[1] || '',
+        firstName:
+          userData.name?.givenName ||
+          userData.displayName?.split(' ')[0] ||
+          userData.userName,
+        lastName:
+          userData.name?.familyName ||
+          userData.displayName?.split(' ')[1] ||
+          '',
         displayName: userData.displayName || userData.userName,
         status: userData.active !== false ? 'ACTIVE' : 'INACTIVE',
       },
@@ -111,8 +120,14 @@ export class ScimService {
       where: { id },
       data: {
         email: userData.userName,
-        firstName: userData.name?.givenName || userData.displayName?.split(' ')[0] || userData.userName,
-        lastName: userData.name?.familyName || userData.displayName?.split(' ')[1] || '',
+        firstName:
+          userData.name?.givenName ||
+          userData.displayName?.split(' ')[0] ||
+          userData.userName,
+        lastName:
+          userData.name?.familyName ||
+          userData.displayName?.split(' ')[1] ||
+          '',
         displayName: userData.displayName || userData.userName,
         status: userData.active !== false ? 'ACTIVE' : 'INACTIVE',
       },
@@ -154,9 +169,9 @@ export class ScimService {
     return {
       schemas: ['urn:ietf:params:scim:api:messages:2.0:ListResponse'],
       totalResults,
-      startIndex: (startIndex || 1),
+      startIndex: startIndex || 1,
       itemsPerPage: users.length,
-      Resources: users.map(user => ({
+      Resources: users.map((user) => ({
         schemas: ['urn:ietf:params:scim:schemas:core:2.0:User'],
         id: user.id,
         externalId: user.clerkId,
@@ -174,31 +189,35 @@ export class ScimService {
 
   private flattenScimConfig(config: any): Record<string, string> {
     const flattened: Record<string, string> = {};
-    
+
     if (config.enabled !== undefined) {
       flattened.scimEnabled = config.enabled ? 'true' : 'false';
     }
-    
+
     if (config.token !== undefined) {
       flattened.scimToken = config.token;
     }
-    
+
     if (config.endpoint !== undefined) {
       flattened.scimEndpoint = config.endpoint;
     }
-    
+
     if (config.autoProvisioning !== undefined) {
-      flattened.scimAutoProvisioning = config.autoProvisioning ? 'true' : 'false';
+      flattened.scimAutoProvisioning = config.autoProvisioning
+        ? 'true'
+        : 'false';
     }
-    
+
     if (config.autoDeprovisioning !== undefined) {
-      flattened.scimAutoDeprovisioning = config.autoDeprovisioning ? 'true' : 'false';
+      flattened.scimAutoDeprovisioning = config.autoDeprovisioning
+        ? 'true'
+        : 'false';
     }
-    
+
     if (config.syncInterval !== undefined) {
       flattened.scimSyncInterval = String(config.syncInterval);
     }
-    
+
     return flattened;
   }
 }

@@ -4,6 +4,7 @@ import { PrismaService } from '../prisma/prisma.service';
 import { ConfigService } from '@nestjs/config';
 import { MailerService } from '@nestjs-modules/mailer';
 import * as nodemailer from 'nodemailer';
+import { NotificationsGateway } from '../notifications/notifications.gateway';
 
 // Define explicit types for ticket and Prisma
 interface Ticket {
@@ -20,19 +21,44 @@ interface Ticket {
   createdAt: string;
 }
 
-
 @Injectable()
 export class EmailService {
   constructor(
     private prisma: PrismaService,
     private config: ConfigService,
-    private mailerService: MailerService
+    private mailerService: MailerService,
+    private notificationsGateway: NotificationsGateway, // Inject gateway
   ) {}
 
   // Email domain allowlist (config/DB-driven)
   private allowedDomains: string[] = [];
   async loadAllowedDomains(): Promise<void> {
-    // TODO: Load from DB or config service; fallback to config for now
+    try {
+      const dbDomains = await this.prisma.configuration.findMany({
+        where: { key: 'ALLOWED_EMAIL_DOMAINS' },
+        select: { value: true },
+      });
+      if (
+        Array.isArray(dbDomains) &&
+        dbDomains.length > 0 &&
+        typeof dbDomains[0].value === 'string'
+      ) {
+        this.allowedDomains = dbDomains[0].value.split(',');
+        return;
+      }
+    } catch (e: unknown) {
+      if (e instanceof Error) {
+        console.warn(
+          'DB config fetch failed, falling back to config service:',
+          e.message,
+        );
+      } else {
+        console.warn(
+          'DB config fetch failed, falling back to config service:',
+          e,
+        );
+      }
+    }
     const domains = this.config.get<string>('ALLOWED_EMAIL_DOMAINS');
     this.allowedDomains = domains
       ? domains.split(',')
@@ -47,19 +73,18 @@ export class EmailService {
   // Spam detection: hybrid (local + external API)
   private spamKeywords = ['buy now', 'free', 'click here'];
   private async isSpam(content: string): Promise<boolean> {
-    // Local heuristic
     const localSpam = this.spamKeywords.some((kw: string) => {
       return content.toLowerCase().includes(kw);
     });
     if (localSpam) return true;
-    // External API (stub: Akismet/SpamAssassin)
     try {
-      // Use dynamic import for node-fetch
-      const fetchModule = (await import('node-fetch')) as { default: typeof import('node-fetch').default };
-      const fetch = fetchModule.default;
+      const fetchModule = (await import('node-fetch')) as {
+        default: typeof import('node-fetch').default;
+      };
+      const fetch = fetchModule?.default;
       const apiKey = this.config.get<string>('SPAM_API_KEY');
       const apiUrl = this.config.get<string>('SPAM_API_URL');
-      if (apiKey && apiUrl) {
+      if (apiKey && apiUrl && typeof fetch === 'function') {
         const resp = await fetch(apiUrl, {
           method: 'POST',
           headers: {
@@ -68,28 +93,58 @@ export class EmailService {
           },
           body: JSON.stringify({ text: content }),
         });
-        const data: { spam?: boolean } = await resp.json();
-        return data.spam === true;
+        if (resp && typeof resp.json === 'function') {
+          const rawData: unknown = await resp.json();
+          let isSpam = false;
+          if (
+            rawData &&
+            typeof rawData === 'object' &&
+            'spam' in rawData &&
+            typeof (rawData as { spam?: unknown }).spam === 'boolean'
+          ) {
+            isSpam = (rawData as { spam: boolean }).spam;
+          }
+          return isSpam === true;
+        }
       }
-    } catch (e) {
-      console.warn('External spam check failed:', e);
+    } catch (e: unknown) {
+      if (e instanceof Error) {
+        console.warn('External spam check failed:', e.message);
+      } else {
+        console.warn('External spam check failed:', e);
+      }
     }
     return false;
   }
 
   // Real-time notification stub (to be implemented with WebSocket/SSE)
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+
   // Stub: mark params as intentionally unused
-  async sendRealtimeNotification(_userId: string, _message: string): Promise<{ success: boolean }> {
-    void _userId;
-    void _message;
-    // TODO: Implement WebSocket/SSE gateway emit
-    return { success: true };
+  async sendRealtimeNotification(
+    userId: string,
+    message: string,
+  ): Promise<{ success: boolean }> {
+    try {
+      await Promise.resolve(
+        this.notificationsGateway.sendNotification(userId, { message }),
+      );
+      return { success: true };
+    } catch (e: unknown) {
+      if (e instanceof Error) {
+        console.error('WebSocket notification failed:', e.message);
+      } else {
+        console.error('WebSocket notification failed:', e);
+      }
+      return { success: false };
+    }
   }
 
   // Slack integration stub
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  async sendSlackNotification(channel: string, text: string): Promise<{ success: boolean; error?: string }> {
+
+  async sendSlackNotification(
+    channel: string,
+    text: string,
+  ): Promise<{ success: boolean; error?: string }> {
     try {
       const token = this.config.get<string>('SLACK_BOT_TOKEN');
       if (!token) throw new Error('Slack bot token not configured');
@@ -99,14 +154,21 @@ export class EmailService {
         text,
       });
       return { success: result.ok };
-    } catch (err: any) {
-      console.error('Slack notification failed:', err);
-      return { success: false, error: err.message };
+    } catch (err: unknown) {
+      if (err instanceof Error) {
+        console.error('Slack notification failed:', err.message);
+        return { success: false, error: err.message };
+      } else {
+        console.error('Slack notification failed:', err);
+        return { success: false, error: String(err) };
+      }
     }
   }
 
-
-  async sendTicketNotification(ticket: Ticket, recipients: string[]): Promise<{ success: boolean; error?: string }> {
+  async sendTicketNotification(
+    ticket: Ticket,
+    recipients: string[],
+  ): Promise<{ success: boolean; error?: string }> {
     // Allowlist check
     for (const email of recipients) {
       if (!(await this.isAllowedDomain(email))) {
@@ -147,12 +209,16 @@ export class EmailService {
         },
       });
       return { success: true };
-    } catch (error) {
-      console.error('Email send failed:', error);
-      return { success: false, error: error.message };
+    } catch (error: unknown) {
+      if (error instanceof Error) {
+        console.error('Email send failed:', error.message);
+        return { success: false, error: error.message };
+      } else {
+        console.error('Email send failed:', error);
+        return { success: false, error: String(error) };
+      }
     }
   }
-
 
   async testSMTPConnection() {
     try {
@@ -169,9 +235,14 @@ export class EmailService {
       });
       await transporter.verify();
       return { success: true, message: 'SMTP connection successful' };
-    } catch (error) {
-      console.error('SMTP test failed:', error);
-      return { success: false, error: error.message };
+    } catch (error: unknown) {
+      if (error instanceof Error) {
+        console.error('SMTP test failed:', error.message);
+        return { success: false, error: error.message };
+      } else {
+        console.error('SMTP test failed:', error);
+        return { success: false, error: String(error) };
+      }
     }
   }
 
@@ -184,9 +255,14 @@ export class EmailService {
         html: message,
       });
       return { success: true };
-    } catch (error) {
-      console.error('Test email send failed:', error);
-      return { success: false, error: error.message };
+    } catch (error: unknown) {
+      if (error instanceof Error) {
+        console.error('Test email send failed:', error.message);
+        return { success: false, error: error.message };
+      } else {
+        console.error('Test email send failed:', error);
+        return { success: false, error: String(error) };
+      }
     }
   }
 }

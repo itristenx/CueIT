@@ -51,66 +51,74 @@ export class NotificationsService {
   async findAll(userId: string) {
     return this.prisma.notification.findMany({
       where: { userId },
-      orderBy: { createdAt: 'desc' }
+      orderBy: { createdAt: 'desc' },
     });
   }
 
-  async create(userId: string, data: {
-    type: NotificationType;
-    title: string;
-    message: string;
-    ticketId?: string;
-  }) {
+  async create(
+    userId: string,
+    data: {
+      type: NotificationType;
+      title: string;
+      message: string;
+      ticketId?: string;
+    },
+  ) {
     return this.prisma.notification.create({
       data: {
         userId,
         type: data.type,
         title: data.title,
         message: data.message,
-        ticketId: data.ticketId
-      }
+        ticketId: data.ticketId,
+      },
     });
   }
 
   async markAsRead(id: string, userId: string) {
     return this.prisma.notification.updateMany({
-      where: { 
+      where: {
         id,
-        userId 
+        userId,
       },
-      data: { read: true }
+      data: { read: true },
     });
   }
 
   async markAllAsRead(userId: string) {
     return this.prisma.notification.updateMany({
       where: { userId },
-      data: { read: true }
+      data: { read: true },
     });
   }
 
   async delete(id: string, userId: string) {
     return this.prisma.notification.deleteMany({
-      where: { 
+      where: {
         id,
-        userId 
-      }
+        userId,
+      },
     });
   }
 
   async getUnreadCount(userId: string) {
     const count = await this.prisma.notification.count({
-      where: { 
+      where: {
         userId,
-        read: false 
-      }
+        read: false,
+      },
     });
     return { count };
   }
 
   // EMAIL NOTIFICATION METHODS
 
-  async sendTicketNotification(type: string, ticketId: string, userId: string, data: any = {}) {
+  async sendTicketNotification(
+    type: string,
+    ticketId: string,
+    userId: string,
+    data: any = {},
+  ) {
     try {
       // Get ticket and user information
       const ticket = await this.prisma.ticket.findUnique({
@@ -156,7 +164,9 @@ export class NotificationsService {
         ticketStatus: ticket.status,
         ticketPriority: ticket.priority,
         ticketUrl: `${this.configService.get('FRONTEND_URL', 'http://localhost:3000')}/tickets/${ticket.id}`,
-        assigneeName: ticket.assignee ? `${ticket.assignee.firstName} ${ticket.assignee.lastName}` : 'Unassigned',
+        assigneeName: ticket.assignee
+          ? `${ticket.assignee.firstName} ${ticket.assignee.lastName}`
+          : 'Unassigned',
         createdAt: ticket.createdAt.toLocaleDateString(),
         ...data,
       };
@@ -168,7 +178,6 @@ export class NotificationsService {
         template: template.id,
         variables,
       });
-
     } catch (error) {
       console.error(`Failed to send ${type} notification:`, error);
       throw error;
@@ -178,16 +187,25 @@ export class NotificationsService {
   async sendEmailNotification(notificationData: NotificationData) {
     try {
       const template = await this.getEmailTemplate(notificationData.template);
-      
+
       if (!template) {
         throw new Error(`Template not found: ${notificationData.template}`);
       }
 
-      const htmlContent = this.replaceVariables(template.htmlContent, notificationData.variables);
-      const textContent = this.replaceVariables(template.textContent, notificationData.variables);
+      const htmlContent = this.replaceVariables(
+        template.htmlContent,
+        notificationData.variables,
+      );
+      const textContent = this.replaceVariables(
+        template.textContent,
+        notificationData.variables,
+      );
 
       const mailOptions = {
-        from: this.configService.get('SMTP_FROM', 'Nova Universe <noreply@nova-universe.com>'),
+        from: this.configService.get(
+          'SMTP_FROM',
+          'Nova Universe <noreply@nova-universe.com>',
+        ),
         to: notificationData.to,
         subject: notificationData.subject,
         html: htmlContent,
@@ -195,7 +213,10 @@ export class NotificationsService {
       };
 
       const result = await this.transporter.sendMail(mailOptions);
-      console.log(`Email sent successfully to ${notificationData.to}:`, result.messageId);
+      console.log(
+        `Email sent successfully to ${notificationData.to}:`,
+        result.messageId,
+      );
 
       return result;
     } catch (error) {
@@ -249,7 +270,16 @@ You can track the progress of your ticket at: {{ticketUrl}}
 
 Thank you for using Nova Universe!
 The Nova Support Team`,
-        variables: ['userName', 'ticketNumber', 'ticketTitle', 'ticketPriority', 'ticketStatus', 'assigneeName', 'createdAt', 'ticketUrl'],
+        variables: [
+          'userName',
+          'ticketNumber',
+          'ticketTitle',
+          'ticketPriority',
+          'ticketStatus',
+          'assigneeName',
+          'createdAt',
+          'ticketUrl',
+        ],
       },
       'ticket-updated': {
         id: 'ticket-updated',
@@ -287,7 +317,13 @@ You can view the full details at: {{ticketUrl}}
 
 Thank you for using Nova Universe!
 The Nova Support Team`,
-        variables: ['userName', 'ticketNumber', 'ticketStatus', 'assigneeName', 'ticketUrl'],
+        variables: [
+          'userName',
+          'ticketNumber',
+          'ticketStatus',
+          'assigneeName',
+          'ticketUrl',
+        ],
       },
       'ticket-resolved': {
         id: 'ticket-resolved',
@@ -333,20 +369,23 @@ The Nova Support Team`,
 
   private getTemplateForNotificationType(type: string): string {
     const templateMap: Record<string, string> = {
-      'created': 'ticket-created',
-      'updated': 'ticket-updated',
-      'assigned': 'ticket-updated',
-      'resolved': 'ticket-resolved',
-      'closed': 'ticket-resolved',
+      created: 'ticket-created',
+      updated: 'ticket-updated',
+      assigned: 'ticket-updated',
+      resolved: 'ticket-resolved',
+      closed: 'ticket-resolved',
       'comment-added': 'ticket-updated',
     };
 
     return templateMap[type] || 'ticket-updated';
   }
 
-  private replaceVariables(content: string, variables: Record<string, any>): string {
+  private replaceVariables(
+    content: string,
+    variables: Record<string, any>,
+  ): string {
     let result = content;
-    
+
     for (const [key, value] of Object.entries(variables)) {
       const regex = new RegExp(`\\{\\{${key}\\}\\}`, 'g');
       result = result.replace(regex, String(value || ''));

@@ -1,0 +1,15 @@
+{
+  "extends": ["config:base"],
+  "packageRules": [
+    {
+      "matchPackagePatterns": ["*"],
+      "groupName": "all dependencies",
+      "enabled": true
+    }
+  ],
+  "npm": {
+    "enabled": true
+  },
+  "automerge": false,
+  "dependencyDashboard": true
+}

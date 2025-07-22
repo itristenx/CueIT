@@ -1,4 +1,3 @@
-
 import {
   Controller,
   Get,
@@ -13,7 +12,11 @@ import {
   Version,
 } from '@nestjs/common';
 import { TicketsService } from './tickets.service';
-import { CreateTicketDto, UpdateTicketDto, CreateCommentDto } from './dto/ticket.dto';
+import {
+  CreateTicketDto,
+  UpdateTicketDto,
+  CreateCommentDto,
+} from './dto/ticket.dto';
 import { ClerkAuthGuard } from '../auth/clerk-auth.guard';
 import { TicketStatus, Priority, TicketType } from '../../generated/prisma';
 
@@ -88,19 +91,19 @@ export class TicketsController {
     @Query('sortOrder') sortOrder: 'asc' | 'desc' = 'desc',
   ) {
     const user = req.user;
-    
+
     // Get user role and department from user metadata or database
     const userRole = user.role || 'end_user';
     const userDepartment = user.department;
-    
+
     const result = await this.ticketsService.findAll(
       parseInt(page),
       parseInt(limit),
       status,
       userRole,
-      userDepartment
+      userDepartment,
     );
-    
+
     // Enhanced response format for v2
     return {
       success: true,
@@ -120,7 +123,7 @@ export class TicketsController {
   async getStatsV2(@Request() req) {
     const user = req.user;
     const stats = await this.ticketsService.getTicketStats();
-    
+
     return {
       success: true,
       data: stats,
@@ -139,7 +142,7 @@ export class TicketsController {
   ) {
     const user = req.user;
     const tickets = await this.ticketsService.getMyTickets(user.sub, type);
-    
+
     return {
       success: true,
       data: tickets,
@@ -158,7 +161,7 @@ export class TicketsController {
   async findOneV2(@Param('id') id: string, @Request() req) {
     const user = req.user;
     const ticket = await this.ticketsService.findOne(id);
-    
+
     return {
       success: true,
       data: ticket,
@@ -175,18 +178,25 @@ export class TicketsController {
     @Request() req,
   ) {
     const user = req.user;
-    
+
     // Enhanced validation for v2
     if (updateTicketDto.title !== undefined && !updateTicketDto.title.trim()) {
       throw new Error('Title cannot be empty');
     }
-    
-    if (updateTicketDto.description !== undefined && !updateTicketDto.description.trim()) {
+
+    if (
+      updateTicketDto.description !== undefined &&
+      !updateTicketDto.description.trim()
+    ) {
       throw new Error('Description cannot be empty');
     }
-    
-    const ticket = await this.ticketsService.update(id, updateTicketDto, user.sub);
-    
+
+    const ticket = await this.ticketsService.update(
+      id,
+      updateTicketDto,
+      user.sub,
+    );
+
     return {
       success: true,
       data: ticket,
@@ -200,7 +210,7 @@ export class TicketsController {
   async removeV2(@Param('id') id: string, @Request() req) {
     const user = req.user;
     await this.ticketsService.remove(id);
-    
+
     return {
       success: true,
       message: 'Ticket deleted successfully',
@@ -217,14 +227,18 @@ export class TicketsController {
     @Request() req,
   ) {
     const user = req.user;
-    
+
     // Enhanced validation for v2
     if (!createCommentDto.content?.trim()) {
       throw new Error('Comment content is required and cannot be empty');
     }
-    
-    const comment = await this.ticketsService.addComment(id, createCommentDto, user.sub);
-    
+
+    const comment = await this.ticketsService.addComment(
+      id,
+      createCommentDto,
+      user.sub,
+    );
+
     return {
       success: true,
       data: comment,
@@ -248,11 +262,7 @@ export class TicketsController {
     @Query('limit') limit: string = '10',
     @Query('status') status?: TicketStatus,
   ) {
-    return this.ticketsService.findAll(
-      parseInt(page),
-      parseInt(limit),
-      status,
-    );
+    return this.ticketsService.findAll(parseInt(page), parseInt(limit), status);
   }
 
   @Get('stats')
@@ -330,7 +340,7 @@ export class TicketsController {
     };
 
     const result = await this.ticketsService.exportTickets(format, filters);
-    
+
     // In a real implementation, you'd set appropriate headers and return the file
     return {
       message: 'Export generated successfully',
@@ -347,13 +357,18 @@ export class TicketsController {
     @Request() req,
   ) {
     const user = req.user;
-    return this.ticketsService.mergeTickets(targetTicketId, data.sourceTicketIds, user.sub);
+    return this.ticketsService.mergeTickets(
+      targetTicketId,
+      data.sourceTicketIds,
+      user.sub,
+    );
   }
 
   @Post(':id/split')
   async splitTicket(
     @Param('id') originalTicketId: string,
-    @Body() data: {
+    @Body()
+    data: {
       newTicketData: {
         title: string;
         description: string;
@@ -370,7 +385,7 @@ export class TicketsController {
       originalTicketId,
       data.newTicketData,
       data.commentIdsToMove,
-      user.sub
+      user.sub,
     );
   }
 }

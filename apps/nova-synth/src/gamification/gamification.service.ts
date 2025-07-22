@@ -27,7 +27,12 @@ export class GamificationService {
     });
   }
 
-  async awardXP(userId: string, amount: number, action: string, source?: string): Promise<UserXP> {
+  async awardXP(
+    userId: string,
+    amount: number,
+    action: string,
+    source?: string,
+  ): Promise<UserXP> {
     const userXP = await this.prisma.userXP.findUnique({
       where: { userId },
     });
@@ -149,17 +154,26 @@ export class GamificationService {
     const newBadges: string[] = [];
 
     // First Ticket Achievement
-    if (userXP.user.assignedTickets.length >= 1 && !badges.includes('first_ticket')) {
+    if (
+      userXP.user.assignedTickets.length >= 1 &&
+      !badges.includes('first_ticket')
+    ) {
       newBadges.push('first_ticket');
     }
 
     // Ticket Master Achievement
-    if (userXP.user.assignedTickets.length >= 50 && !badges.includes('ticket_master')) {
+    if (
+      userXP.user.assignedTickets.length >= 50 &&
+      !badges.includes('ticket_master')
+    ) {
       newBadges.push('ticket_master');
     }
 
     // Helpful Commenter Achievement
-    if (userXP.user.ticketComments.length >= 100 && !badges.includes('helpful_commenter')) {
+    if (
+      userXP.user.ticketComments.length >= 100 &&
+      !badges.includes('helpful_commenter')
+    ) {
       newBadges.push('helpful_commenter');
     }
 
@@ -187,7 +201,12 @@ export class GamificationService {
 
       // Award XP for achievements
       for (const badge of newBadges) {
-        await this.awardXP(userId, 50, `Badge earned: ${badge}`, 'achievements');
+        await this.awardXP(
+          userId,
+          50,
+          `Badge earned: ${badge}`,
+          'achievements',
+        );
       }
     }
   }

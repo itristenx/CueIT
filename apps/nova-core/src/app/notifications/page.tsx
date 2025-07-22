@@ -373,6 +373,14 @@ export default function NotificationsPage() {
                 <CardTitle>Recent Notifications</CardTitle>
               </CardHeader>
               <CardContent>
+                <div className="mb-4">
+                  <Input 
+                    type="text" 
+                    title="Notification Filter" 
+                    placeholder="Filter notifications"
+                    className="w-full max-w-sm"
+                  />
+                </div>
                 <Table>
                   <TableHeader>
                     <TableRow>
@@ -516,21 +524,21 @@ export default function NotificationsPage() {
                       <Label>Email Notifications</Label>
                       <p className="text-sm text-muted-foreground">Send notifications via email</p>
                     </div>
-                    <input type="checkbox" defaultChecked className="rounded border-gray-300" />
+                    <input type="checkbox" defaultChecked className="rounded border-gray-300" aria-label="Email Notifications" title="Email Notifications" />
                   </div>
                   <div className="flex items-center justify-between">
                     <div>
                       <Label>Slack Notifications</Label>
                       <p className="text-sm text-muted-foreground">Send notifications to Slack</p>
                     </div>
-                    <input type="checkbox" defaultChecked className="rounded border-gray-300" />
+                    <input type="checkbox" defaultChecked className="rounded border-gray-300" aria-label="Slack Notifications" title="Slack Notifications" />
                   </div>
                   <div className="flex items-center justify-between">
                     <div>
                       <Label>System Notifications</Label>
                       <p className="text-sm text-muted-foreground">Show in-app notifications</p>
                     </div>
-                    <input type="checkbox" defaultChecked className="rounded border-gray-300" />
+                    <input type="checkbox" defaultChecked className="rounded border-gray-300" aria-label="System Notifications" title="System Notifications" />
                   </div>
                 </div>
               </CardContent>
@@ -553,6 +561,7 @@ export default function NotificationsPage() {
                     value={composer.title}
                     onChange={(e) => setComposer({...composer, title: e.target.value})}
                     placeholder="Notification title"
+                    title="Notification Title"
                   />
                 </div>
                 
@@ -564,6 +573,7 @@ export default function NotificationsPage() {
                     onChange={(e) => setComposer({...composer, message: e.target.value})}
                     placeholder="Notification message"
                     rows={4}
+                    title="Notification Message"
                   />
                 </div>
                 
@@ -585,7 +595,7 @@ export default function NotificationsPage() {
                   
                   <div className="space-y-2">
                     <Label>Recipients</Label>
-                    <Select value={composer.recipients} onValueChange={(value) => setComposer({...composer, recipients: value})}>
+                    <Select value={composer.recipients} onValueChange={(value: string) => setComposer({...composer, recipients: value})}>
                       <SelectTrigger>
                         <SelectValue />
                       </SelectTrigger>
@@ -600,6 +610,7 @@ export default function NotificationsPage() {
                 </div>
                 
                 <div className="flex items-center space-x-2">
+                  <label htmlFor="schedule" className="sr-only">Schedule for later</label>
                   <input
                     type="checkbox"
                     id="schedule"
@@ -618,6 +629,7 @@ export default function NotificationsPage() {
                       type="datetime-local"
                       value={composer.scheduledAt}
                       onChange={(e) => setComposer({...composer, scheduledAt: e.target.value})}
+                      title="Scheduled Time"
                     />
                   </div>
                 )}
@@ -637,4 +649,15 @@ export default function NotificationsPage() {
       </div>
     </AdminLayout>
   );
+}
+
+// Adding type declarations for JSX elements.
+declare global {
+  namespace JSX {
+    interface IntrinsicElements {
+      div: React.DetailedHTMLProps<React.HTMLAttributes<HTMLDivElement>, HTMLDivElement>;
+      input: React.DetailedHTMLProps<React.InputHTMLAttributes<HTMLInputElement>, HTMLInputElement>;
+      // Add other elements as needed
+    }
+  }
 }

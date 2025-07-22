@@ -1,4 +1,13 @@
-import { Controller, Get, Post, Put, Delete, Param, Body, Query } from '@nestjs/common';
+import {
+  Controller,
+  Get,
+  Post,
+  Put,
+  Delete,
+  Param,
+  Body,
+  Query,
+} from '@nestjs/common';
 import { FeedbackService } from './feedback.service';
 
 @Controller('feedback')
@@ -29,7 +38,10 @@ export class FeedbackController {
   }
 
   @Put(':id')
-  async updateFeedback(@Param('id') id: string, @Body() updateFeedbackDto: any) {
+  async updateFeedback(
+    @Param('id') id: string,
+    @Body() updateFeedbackDto: any,
+  ) {
     return this.feedbackService.updateFeedback(id, updateFeedbackDto);
   }
 

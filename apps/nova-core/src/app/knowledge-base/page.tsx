@@ -430,10 +430,11 @@ export default function KnowledgeBasePage() {
           <div className="flex-1 relative">
             <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
             <Input
-              placeholder="Search articles..."
+              placeholder="Search knowledge base"
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
               className="pl-10"
+              title="Knowledge Base Search"
             />
           </div>
           <Select value={statusFilter} onValueChange={setStatusFilter}>
@@ -578,7 +579,7 @@ export default function KnowledgeBasePage() {
                   
                   <div className="space-y-2">
                     <Label htmlFor="category">Category</Label>
-                    <Select value={articleForm.category} onValueChange={(value) => setArticleForm({...articleForm, category: value})}>
+                    <Select value={articleForm.category} onValueChange={(value: string) => setArticleForm({...articleForm, category: value})}>
                       <SelectTrigger>
                         <SelectValue placeholder="Select category" />
                       </SelectTrigger>
@@ -658,7 +659,7 @@ export default function KnowledgeBasePage() {
                 {articleForm.visibility === 'department' && (
                   <div className="space-y-2">
                     <Label htmlFor="department">Department</Label>
-                    <Select value={articleForm.department} onValueChange={(value) => setArticleForm({...articleForm, department: value})}>
+                    <Select value={articleForm.department} onValueChange={(value: string) => setArticleForm({...articleForm, department: value})}>
                       <SelectTrigger>
                         <SelectValue placeholder="Select department" />
                       </SelectTrigger>
@@ -673,6 +674,7 @@ export default function KnowledgeBasePage() {
                 )}
                 
                 <div className="flex items-center space-x-2">
+                  <label htmlFor="featured" className="sr-only">Featured article</label>
                   <input
                     type="checkbox"
                     id="featured"
@@ -712,4 +714,15 @@ export default function KnowledgeBasePage() {
       </div>
     </AdminLayout>
   );
+}
+
+// Adding type declarations for JSX elements.
+declare global {
+  namespace JSX {
+    interface IntrinsicElements {
+      div: React.DetailedHTMLProps<React.HTMLAttributes<HTMLDivElement>, HTMLDivElement>;
+      input: React.DetailedHTMLProps<React.InputHTMLAttributes<HTMLInputElement>, HTMLInputElement>;
+      // Add other elements as needed
+    }
+  }
 }

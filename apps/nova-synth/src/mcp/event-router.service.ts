@@ -1,5 +1,7 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { EventEmitter2 } from '@nestjs/event-emitter';
+import { AnalyticsService } from './analytics.service';
+import { MetricsService } from './metrics.service';
 
 interface NovaEvent {
   type: string;
@@ -12,9 +14,17 @@ interface NovaEvent {
 export class EventRouterService {
   private readonly logger = new Logger(EventRouterService.name);
 
-  constructor(private readonly eventEmitter: EventEmitter2) {}
+  constructor(
+    private readonly eventEmitter: EventEmitter2,
+    private readonly analyticsService: AnalyticsService,
+    private readonly metricsService: MetricsService,
+  ) {}
 
-  async routeEvent(eventType: string, data: any, source: string = 'mcp'): Promise<void> {
+  async routeEvent(
+    eventType: string,
+    data: any,
+    source: string = 'mcp',
+  ): Promise<void> {
     const event: NovaEvent = {
       type: eventType,
       data,
@@ -27,14 +37,17 @@ export class EventRouterService {
     try {
       // Emit the event to all listeners
       this.eventEmitter.emit(eventType, event);
-      
+
       // Emit a generic 'nova.event' for global listeners
       this.eventEmitter.emit('nova.event', event);
 
       // Route specific events to appropriate handlers
       await this.handleSpecificEvents(event);
     } catch (error) {
-      this.logger.error(`Error routing event ${eventType}: ${error.message}`, error.stack);
+      this.logger.error(
+        `Error routing event ${eventType}: ${error.message}`,
+        error.stack,
+      );
     }
   }
 
@@ -43,19 +56,19 @@ export class EventRouterService {
       case 'message_processed':
         await this.handleMessageProcessed(event);
         break;
-      
+
       case 'ticket_created':
         await this.handleTicketCreated(event);
         break;
-      
+
       case 'user_status_requested':
         await this.handleUserStatusRequested(event);
         break;
-      
+
       case 'tool_executed':
         await this.handleToolExecuted(event);
         break;
-      
+
       default:
         this.logger.debug(`No specific handler for event type: ${event.type}`);
     }
@@ -63,16 +76,29 @@ export class EventRouterService {
 
   private async handleMessageProcessed(event: NovaEvent): Promise<void> {
     // Log AI interaction for analytics
-    this.logger.debug(`AI message processed for user ${event.data.userId} in module ${event.data.module}`);
-    
-    // TODO: Send to analytics service
-    // TODO: Update user engagement metrics
+    this.logger.debug(
+      `AI message processed for user ${event.data.userId} in module ${event.data.module}`,
+    );
+
+    // Send data to analytics service
+    await this.analyticsService.logEvent({
+      userId: event.data.userId,
+      module: event.data.module,
+      eventType: 'message_processed',
+      timestamp: new Date(),
+    });
+
+    // Update user engagement metrics
+    await this.metricsService.updateUserEngagement(event.data.userId, {
+      module: event.data.module,
+      interactionCount: 1,
+    });
   }
 
   private async handleTicketCreated(event: NovaEvent): Promise<void> {
     // Handle ticket creation notifications
     this.logger.debug(`Ticket created: ${event.data.ticketId}`);
-    
+
     // TODO: Send notifications to relevant technicians
     // TODO: Update ticket metrics
     // TODO: Trigger workflow automation
@@ -81,21 +107,27 @@ export class EventRouterService {
   private async handleUserStatusRequested(event: NovaEvent): Promise<void> {
     // Handle user status requests
     this.logger.debug(`User status requested for ${event.data.userId}`);
-    
+
     // TODO: Update user activity tracking
     // TODO: Calculate XP and badges
   }
 
   private async handleToolExecuted(event: NovaEvent): Promise<void> {
     // Handle tool execution tracking
-    this.logger.debug(`Tool executed: ${event.data.toolName} by user ${event.data.userId}`);
-    
+    this.logger.debug(
+      `Tool executed: ${event.data.toolName} by user ${event.data.userId}`,
+    );
+
     // TODO: Update tool usage analytics
     // TODO: Track user tool preferences
   }
 
   // Public methods for other services to emit events
-  async emitTicketCreated(ticketId: string, userId: string, data: any): Promise<void> {
+  async emitTicketCreated(
+    ticketId: string,
+    userId: string,
+    data: any,
+  ): Promise<void> {
     await this.routeEvent('ticket_created', {
       ticketId,
       userId,
@@ -103,7 +135,12 @@ export class EventRouterService {
     });
   }
 
-  async emitUserEngagement(userId: string, action: string, module: string, data: any = {}): Promise<void> {
+  async emitUserEngagement(
+    userId: string,
+    action: string,
+    module: string,
+    data: any = {},
+  ): Promise<void> {
     await this.routeEvent('user_engagement', {
       userId,
       action,
@@ -112,7 +149,12 @@ export class EventRouterService {
     });
   }
 
-  async emitToolUsage(toolName: string, userId: string, success: boolean, data: any = {}): Promise<void> {
+  async emitToolUsage(
+    toolName: string,
+    userId: string,
+    success: boolean,
+    data: any = {},
+  ): Promise<void> {
     await this.routeEvent('tool_executed', {
       toolName,
       userId,

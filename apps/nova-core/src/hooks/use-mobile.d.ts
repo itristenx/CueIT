@@ -1,1 +1,1 @@
-export declare function useIsMobile(): boolean;
+export { useIsMobile } from 'nova-shared/hooks/useIsMobile';

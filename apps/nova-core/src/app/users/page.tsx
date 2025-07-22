@@ -246,10 +246,11 @@ export default function UsersPage() {
         <div className="relative flex-1 max-w-sm">
           <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
           <Input
-            placeholder="Search users..."
+            placeholder="Search users"
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
             className="pl-10"
+            title="User Search"
           />
         </div>
         <Select defaultValue="all">
@@ -503,6 +504,7 @@ function UserForm({ user, onSubmit, onCancel }: UserFormProps) {
       </div>
 
       <div className="flex items-center space-x-2">
+        <label htmlFor="isAdmin" className="sr-only">System Administrator</label>
         <input
           type="checkbox"
           id="isAdmin"
@@ -523,4 +525,15 @@ function UserForm({ user, onSubmit, onCancel }: UserFormProps) {
       </div>
     </form>
   );
+}
+
+// Adding type declarations for JSX elements.
+declare global {
+  namespace JSX {
+    interface IntrinsicElements {
+      div: React.DetailedHTMLProps<React.HTMLAttributes<HTMLDivElement>, HTMLDivElement>;
+      input: React.DetailedHTMLProps<React.InputHTMLAttributes<HTMLInputElement>, HTMLInputElement>;
+      // Add other elements as needed
+    }
+  }
 }

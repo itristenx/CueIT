@@ -9,8 +9,8 @@ import { RecurringTicketService } from './recurring-ticket.service';
 
 @Module({
   imports: [
-    PrismaModule, 
-    SecurityModule, 
+    PrismaModule,
+    SecurityModule,
     SlaModule,
     forwardRef(() => WorkflowModule),
   ],

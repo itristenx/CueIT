@@ -40,7 +40,11 @@ export class NovaAscendService {
     KNOWLEDGE_SHARE: 25,
   };
 
-  async awardXP(userId: string, action: string, amount?: number): Promise<NovaAscendProfile> {
+  async awardXP(
+    userId: string,
+    action: string,
+    amount?: number,
+  ): Promise<NovaAscendProfile> {
     const xpAmount = amount || this.XP_REWARDS[action] || 0;
     const stardustAmount = Math.floor(xpAmount / 10);
 

@@ -6,7 +6,9 @@ import type { User, UserXP } from '../../generated/prisma';
 export class NovaIdService {
   constructor(private readonly prisma: PrismaService) {}
 
-  async getUserProfile(novaId: string): Promise<User & { userXP?: UserXP | null }> {
+  async getUserProfile(
+    novaId: string,
+  ): Promise<User & { userXP?: UserXP | null }> {
     const user = await this.prisma.user.findUnique({
       where: { novaId },
       include: {
@@ -49,17 +51,23 @@ export class NovaIdService {
     });
   }
 
-  async linkAccount(linkData: { novaId: string; platform: string; externalId: string }): Promise<User> {
+  async linkAccount(linkData: {
+    novaId: string;
+    platform: string;
+    externalId: string;
+  }): Promise<User> {
     const user = await this.prisma.user.findUnique({
       where: { novaId: linkData.novaId },
     });
 
     if (!user) {
-      throw new NotFoundException(`User with Nova ID ${linkData.novaId} not found`);
+      throw new NotFoundException(
+        `User with Nova ID ${linkData.novaId} not found`,
+      );
     }
 
     // Update user metadata with linked account
-    const currentMetadata = user.metadata as any || {};
+    const currentMetadata = (user.metadata as any) || {};
     const linkedAccounts = currentMetadata.linkedAccounts || {};
     linkedAccounts[linkData.platform] = linkData.externalId;
 

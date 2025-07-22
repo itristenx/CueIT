@@ -33,7 +33,10 @@ export class GamificationController {
 
   @Get('leaderboard')
   @ApiOperation({ summary: 'Get XP leaderboard' })
-  @ApiResponse({ status: 200, description: 'Leaderboard retrieved successfully' })
+  @ApiResponse({
+    status: 200,
+    description: 'Leaderboard retrieved successfully',
+  })
   async getLeaderboard() {
     return this.gamificationService.getLeaderboard();
   }

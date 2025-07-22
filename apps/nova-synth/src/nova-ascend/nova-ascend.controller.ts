@@ -9,14 +9,20 @@ export class NovaAscendController {
 
   @Get('leaderboard')
   @ApiOperation({ summary: 'Get XP leaderboard' })
-  @ApiResponse({ status: 200, description: 'XP leaderboard retrieved successfully' })
+  @ApiResponse({
+    status: 200,
+    description: 'XP leaderboard retrieved successfully',
+  })
   async getLeaderboard(@Query('department') department?: string) {
     return this.novaAscendService.getLeaderboard(department);
   }
 
   @Get('user/:userId/profile')
   @ApiOperation({ summary: 'Get user gamification profile' })
-  @ApiResponse({ status: 200, description: 'User profile retrieved successfully' })
+  @ApiResponse({
+    status: 200,
+    description: 'User profile retrieved successfully',
+  })
   async getUserProfile(@Param('userId') userId: string) {
     return this.novaAscendService.getNovaAscendProfile(userId);
   }
@@ -28,7 +34,11 @@ export class NovaAscendController {
     @Param('userId') userId: string,
     @Body() awardData: { action: string; amount?: number },
   ) {
-    return this.novaAscendService.awardXP(userId, awardData.action, awardData.amount);
+    return this.novaAscendService.awardXP(
+      userId,
+      awardData.action,
+      awardData.amount,
+    );
   }
 
   @Post('user/:userId/badge')

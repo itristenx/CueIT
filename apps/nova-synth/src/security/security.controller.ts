@@ -1,4 +1,12 @@
-import { Controller, Get, Post, Put, Delete, Param, Body } from '@nestjs/common';
+import {
+  Controller,
+  Get,
+  Post,
+  Put,
+  Delete,
+  Param,
+  Body,
+} from '@nestjs/common';
 import { SecurityService } from './security.service';
 
 @Controller('security')
@@ -16,8 +24,14 @@ export class SecurityController {
   }
 
   @Post('settings')
-  async createOrUpdateSecuritySetting(@Body() body: { key: string; value: string; encrypted?: boolean }) {
-    return this.securityService.createOrUpdateSecuritySetting(body.key, body.value, body.encrypted);
+  async createOrUpdateSecuritySetting(
+    @Body() body: { key: string; value: string; encrypted?: boolean },
+  ) {
+    return this.securityService.createOrUpdateSecuritySetting(
+      body.key,
+      body.value,
+      body.encrypted,
+    );
   }
 
   @Delete('settings/:key')

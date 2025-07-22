@@ -1,4 +1,10 @@
-import { IsString, IsOptional, IsArray, IsBoolean, IsEnum } from 'class-validator';
+import {
+  IsString,
+  IsOptional,
+  IsArray,
+  IsBoolean,
+  IsEnum,
+} from 'class-validator';
 import { RequestCatalogCategory } from '../../../generated/prisma';
 
 export enum FormFieldType {
@@ -13,7 +19,7 @@ export enum FormFieldType {
   URL = 'url',
   CHECKBOX = 'checkbox',
   RADIO = 'radio',
-  FILE = 'file'
+  FILE = 'file',
 }
 
 export class FormFieldOption {

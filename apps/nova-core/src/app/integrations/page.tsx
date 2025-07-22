@@ -199,7 +199,7 @@ export default function IntegrationsPage() {
       }
       
       // Update integration status
-      setIntegrations(prev => prev.map(integration => 
+      setIntegrations((prev: Integration[]) => prev.map((integration: Integration) => 
         integration.id === integrationId 
           ? { ...integration, status: 'connected' as const }
           : integration
@@ -496,6 +496,7 @@ export default function IntegrationsPage() {
                       <div className="relative">
                         <Input
                           id="botToken"
+                          title="Bot Token"
                           type={showPasswords ? "text" : "password"}
                           value={activeIntegration.config.botToken || ''}
                           onChange={(e) => setActiveIntegration({
@@ -520,6 +521,7 @@ export default function IntegrationsPage() {
                       <Label htmlFor="signingSecret">Signing Secret</Label>
                       <Input
                         id="signingSecret"
+                        title="Signing Secret"
                         type={showPasswords ? "text" : "password"}
                         value={activeIntegration.config.signingSecret || ''}
                         onChange={(e) => setActiveIntegration({
@@ -534,6 +536,7 @@ export default function IntegrationsPage() {
                       <Label htmlFor="channel">Default Channel</Label>
                       <Input
                         id="channel"
+                        title="Default Channel"
                         value={activeIntegration.config.channel || ''}
                         onChange={(e) => setActiveIntegration({
                           ...activeIntegration,
@@ -553,6 +556,7 @@ export default function IntegrationsPage() {
                         <Label htmlFor="host">SMTP Host</Label>
                         <Input
                           id="host"
+                          title="SMTP Host"
                           value={activeIntegration.config.host || ''}
                           onChange={(e) => setActiveIntegration({
                             ...activeIntegration,
@@ -566,6 +570,7 @@ export default function IntegrationsPage() {
                         <Label htmlFor="port">Port</Label>
                         <Input
                           id="port"
+                          title="Port"
                           type="number"
                           value={activeIntegration.config.port || ''}
                           onChange={(e) => setActiveIntegration({
@@ -581,6 +586,7 @@ export default function IntegrationsPage() {
                       <Label htmlFor="user">Username</Label>
                       <Input
                         id="user"
+                        title="Username"
                         value={activeIntegration.config.user || ''}
                         onChange={(e) => setActiveIntegration({
                           ...activeIntegration,
@@ -595,6 +601,7 @@ export default function IntegrationsPage() {
                       <div className="relative">
                         <Input
                           id="password"
+                          title="Password"
                           type={showPasswords ? "text" : "password"}
                           value={activeIntegration.config.password || ''}
                           onChange={(e) => setActiveIntegration({
@@ -626,7 +633,7 @@ export default function IntegrationsPage() {
                         })}
                         className="rounded border-gray-300"
                       />
-                      <Label htmlFor="secure">Use SSL/TLS</Label>
+                      <label htmlFor="secure">Use SSL/TLS</label>
                     </div>
                   </div>
                 )}
@@ -639,6 +646,7 @@ export default function IntegrationsPage() {
                         <Label htmlFor="ldapHost">LDAP Host</Label>
                         <Input
                           id="ldapHost"
+                          title="LDAP Host"
                           value={activeIntegration.config.host || ''}
                           onChange={(e) => setActiveIntegration({
                             ...activeIntegration,
@@ -652,6 +660,7 @@ export default function IntegrationsPage() {
                         <Label htmlFor="ldapPort">Port</Label>
                         <Input
                           id="ldapPort"
+                          title="Port"
                           type="number"
                           value={activeIntegration.config.port || ''}
                           onChange={(e) => setActiveIntegration({
@@ -667,6 +676,7 @@ export default function IntegrationsPage() {
                       <Label htmlFor="baseDN">Base DN</Label>
                       <Input
                         id="baseDN"
+                        title="Base DN"
                         value={activeIntegration.config.baseDN || ''}
                         onChange={(e) => setActiveIntegration({
                           ...activeIntegration,
@@ -680,6 +690,7 @@ export default function IntegrationsPage() {
                       <Label htmlFor="bindDN">Bind DN</Label>
                       <Input
                         id="bindDN"
+                        title="Bind DN"
                         value={activeIntegration.config.bindDN || ''}
                         onChange={(e) => setActiveIntegration({
                           ...activeIntegration,
@@ -694,6 +705,7 @@ export default function IntegrationsPage() {
                       <div className="relative">
                         <Input
                           id="bindPassword"
+                          title="Bind Password"
                           type={showPasswords ? "text" : "password"}
                           value={activeIntegration.config.bindPassword || ''}
                           onChange={(e) => setActiveIntegration({
@@ -735,3 +747,24 @@ export default function IntegrationsPage() {
     </AdminLayout>
   );
 }
+
+// Expanding JSX type declarations to include missing elements.
+declare global {
+  namespace JSX {
+    interface IntrinsicElements {
+      div: React.DetailedHTMLProps<React.HTMLAttributes<HTMLDivElement>, HTMLDivElement>;
+      input: React.DetailedHTMLProps<React.InputHTMLAttributes<HTMLInputElement>, HTMLInputElement>;
+      p: React.DetailedHTMLProps<React.HTMLAttributes<HTMLParagraphElement>, HTMLParagraphElement>;
+      h1: React.DetailedHTMLProps<React.HTMLAttributes<HTMLHeadingElement>, HTMLHeadingElement>;
+      // Add other elements as needed
+    }
+  }
+}
+
+interface AdminLayoutProps {
+  children: React.ReactNode;
+  // ...other properties...
+}
+
+declare module 'react';
+declare module 'lucide-react';

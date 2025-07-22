@@ -21,8 +21,13 @@ export class ServerController {
   }
 
   @Post('maintenance')
-  async setMaintenanceMode(@Body() body: { enabled: boolean; announcement?: string }) {
-    return this.serverService.setMaintenanceMode(body.enabled, body.announcement);
+  async setMaintenanceMode(
+    @Body() body: { enabled: boolean; announcement?: string },
+  ) {
+    return this.serverService.setMaintenanceMode(
+      body.enabled,
+      body.announcement,
+    );
   }
 
   @Get('stats')

@@ -4,9 +4,11 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Ticket, User, Clock, AlertCircle } from 'lucide-react';
 import { useTickets } from '../src/hooks/useTickets';
+import { useUserStats } from '../src/hooks/useUserStats';
 
 export default function PulsePage() {
   const { data: tickets, isLoading, error } = useTickets();
+  const { data: userStats, isLoading: statsLoading, error: statsError } = useUserStats();
 
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
@@ -65,27 +67,32 @@ export default function PulsePage() {
             <CardDescription>Gamification and performance metrics</CardDescription>
           </CardHeader>
           <CardContent>
-            <div className="space-y-4">
-              <div className="flex items-center justify-between">
-                <span className="text-sm font-medium">XP Level</span>
-                <span className="text-2xl font-bold text-blue-600">Level 12</span>
+            {statsLoading && <div>Loading stats...</div>}
+            {statsError && <div className="text-red-500">Error loading stats</div>}
+            {userStats && (
+              <div className="space-y-4">
+                <div className="flex items-center justify-between">
+                  <span className="text-sm font-medium">XP Level</span>
+                  <span className="text-2xl font-bold text-blue-600">Level {userStats.xpLevel}</span>
+                </div>
+                <div className="flex items-center justify-between">
+                  <span className="text-sm font-medium">Stardust Points</span>
+                  <span className="text-xl font-semibold text-purple-600">{userStats.stardustPoints.toLocaleString()}</span>
+                </div>
+                <div className="flex items-center justify-between">
+                  <span className="text-sm font-medium">Rank</span>
+                  <Badge variant="outline" className="bg-yellow-100 text-yellow-800">{userStats.rank}</Badge>
+                </div>
+                <div className="flex items-center justify-between">
+                  <span className="text-sm font-medium">Tickets Resolved</span>
+                  <span className="text-lg font-semibold">{userStats.ticketsResolved}</span>
+                </div>
               </div>
-              <div className="flex items-center justify-between">
-                <span className="text-sm font-medium">Stardust Points</span>
-                <span className="text-xl font-semibold text-purple-600">2,450</span>
-              </div>
-              <div className="flex items-center justify-between">
-                <span className="text-sm font-medium">Rank</span>
-                <Badge variant="outline" className="bg-yellow-100 text-yellow-800">Specialist</Badge>
-              </div>
-              <div className="flex items-center justify-between">
-                <span className="text-sm font-medium">Tickets Resolved</span>
-                <span className="text-lg font-semibold">156</span>
-              </div>
-            </div>
+            )}
           </CardContent>
         </Card>
       </div>
     </div>
   );
+}
 

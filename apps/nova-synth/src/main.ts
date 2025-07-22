@@ -6,21 +6,24 @@ import { AppModule } from './app.module';
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
-  
+
   // Enable CORS
   app.enableCors({
-    origin: process.env.NODE_ENV === 'production' 
-      ? ['https://orbit.nova.universe', 'https://core.nova.universe']
-      : ['http://localhost:3000', 'http://localhost:3002'],
+    origin:
+      process.env.NODE_ENV === 'production'
+        ? ['https://orbit.nova.universe', 'https://core.nova.universe']
+        : ['http://localhost:3000', 'http://localhost:3002'],
     credentials: true,
   });
 
   // Global validation pipe
-  app.useGlobalPipes(new ValidationPipe({
-    transform: true,
-    whitelist: true,
-    forbidNonWhitelisted: true,
-  }));
+  app.useGlobalPipes(
+    new ValidationPipe({
+      transform: true,
+      whitelist: true,
+      forbidNonWhitelisted: true,
+    }),
+  );
 
   // API versioning - v2 is now the default
   app.enableVersioning({
@@ -35,7 +38,9 @@ async function bootstrap() {
   // Swagger Documentation Setup
   const config = new DocumentBuilder()
     .setTitle('Nova Universe API')
-    .setDescription('Comprehensive API for Nova Universe platform - ticketing, identity, AI, and workflow management')
+    .setDescription(
+      'Comprehensive API for Nova Universe platform - ticketing, identity, AI, and workflow management',
+    )
     .setVersion('2.0.0')
     .addBearerAuth()
     .addTag('Authentication', 'User authentication and session management')

@@ -20,7 +20,11 @@ export class SecurityService {
     });
   }
 
-  async createOrUpdateSecuritySetting(key: string, value: string, encrypted: boolean = false) {
+  async createOrUpdateSecuritySetting(
+    key: string,
+    value: string,
+    encrypted: boolean = false,
+  ) {
     let processedValue = value;
     if (encrypted) {
       processedValue = await bcrypt.hash(value, 12);
@@ -50,14 +54,25 @@ export class SecurityService {
     const settings = await this.prisma.securitySetting.findMany({
       where: {
         key: {
-          in: ['password_min_length', 'password_require_uppercase', 'password_require_lowercase', 'password_require_numbers', 'password_require_symbols'],
+          in: [
+            'password_min_length',
+            'password_require_uppercase',
+            'password_require_lowercase',
+            'password_require_numbers',
+            'password_require_symbols',
+          ],
         },
       },
     });
 
     return settings.reduce((policy, setting) => {
       const key = setting.key.replace('password_', '');
-      policy[key] = setting.value === 'true' ? true : setting.value === 'false' ? false : setting.value;
+      policy[key] =
+        setting.value === 'true'
+          ? true
+          : setting.value === 'false'
+            ? false
+            : setting.value;
       return policy;
     }, {} as any);
   }
@@ -70,7 +85,10 @@ export class SecurityService {
 
     const results: any[] = [];
     for (const update of updates) {
-      const result = await this.createOrUpdateSecuritySetting(update.key, update.value);
+      const result = await this.createOrUpdateSecuritySetting(
+        update.key,
+        update.value,
+      );
       results.push(result);
     }
 
@@ -81,14 +99,23 @@ export class SecurityService {
     const settings = await this.prisma.securitySetting.findMany({
       where: {
         key: {
-          in: ['session_timeout', 'session_remember_me', 'session_max_concurrent'],
+          in: [
+            'session_timeout',
+            'session_remember_me',
+            'session_max_concurrent',
+          ],
         },
       },
     });
 
     return settings.reduce((sessionSettings, setting) => {
       const key = setting.key.replace('session_', '');
-      sessionSettings[key] = setting.value === 'true' ? true : setting.value === 'false' ? false : setting.value;
+      sessionSettings[key] =
+        setting.value === 'true'
+          ? true
+          : setting.value === 'false'
+            ? false
+            : setting.value;
       return sessionSettings;
     }, {} as any);
   }
@@ -101,7 +128,10 @@ export class SecurityService {
 
     const results: any[] = [];
     for (const update of updates) {
-      const result = await this.createOrUpdateSecuritySetting(update.key, update.value);
+      const result = await this.createOrUpdateSecuritySetting(
+        update.key,
+        update.value,
+      );
       results.push(result);
     }
 
@@ -112,14 +142,23 @@ export class SecurityService {
     const settings = await this.prisma.securitySetting.findMany({
       where: {
         key: {
-          in: ['two_factor_enabled', 'two_factor_required', 'two_factor_backup_codes'],
+          in: [
+            'two_factor_enabled',
+            'two_factor_required',
+            'two_factor_backup_codes',
+          ],
         },
       },
     });
 
     return settings.reduce((twoFactorSettings, setting) => {
       const key = setting.key.replace('two_factor_', '');
-      twoFactorSettings[key] = setting.value === 'true' ? true : setting.value === 'false' ? false : setting.value;
+      twoFactorSettings[key] =
+        setting.value === 'true'
+          ? true
+          : setting.value === 'false'
+            ? false
+            : setting.value;
       return twoFactorSettings;
     }, {} as any);
   }
@@ -132,7 +171,10 @@ export class SecurityService {
 
     const results: any[] = [];
     for (const update of updates) {
-      const result = await this.createOrUpdateSecuritySetting(update.key, update.value);
+      const result = await this.createOrUpdateSecuritySetting(
+        update.key,
+        update.value,
+      );
       results.push(result);
     }
 

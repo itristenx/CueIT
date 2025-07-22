@@ -16,7 +16,7 @@ model EmailTemplate {
 
 generator client {
   provider = "prisma-client-js"
-  output   = "../generated/prisma"
+  output   = "../../../../node_modules/@prisma/client"
 }
 
 datasource db {
@@ -101,6 +101,7 @@ model RecurringTicketRule {
   nextRunAt     DateTime?
   isActive      Boolean  @default(true)
   metadata      Json?
+  interval      Int      // Interval in milliseconds
   createdAt     DateTime @default(now())
   updatedAt     DateTime @updatedAt
 
@@ -383,7 +384,7 @@ model Feedback {
   email     String?
   metadata  Json?
   createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  updatedAt DateTime @default(now())
 
   @@map("feedback")
 }
@@ -395,20 +396,22 @@ model SecuritySetting {
   value     String
   encrypted Boolean  @default(false)
   createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  updatedAt DateTime @default(now())
 
   @@map("security_settings")
 }
 
 // Server Information
 model ServerInfo {
-  id           String   @id @default(cuid())
-  version      String
-  environment  String
-  maintenance  Boolean  @default(false)
+  id          String   @id @default(cuid())
+  name        String   @unique
+  version     String
+  environment String
+  maintenance Boolean  @default(false)
   announcement String?
-  metadata     Json?
-  updatedAt    DateTime @updatedAt
+  metadata    String?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @default(now())
 
   @@map("server_info")
 }
@@ -581,7 +584,7 @@ model UserXP {
   streak    Int      @default(0)
   lastActionAt DateTime?
   createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  updatedAt DateTime @default(now())
   
   // Relationships
   xpTransactions XPTransaction[]
@@ -607,13 +610,18 @@ model XPTransaction {
 // Nova MCP Server - Conversation Memory
 model Conversation {
   id          String   @id @default(cuid())
-  userId      String   // Reference to user
-  module      String   // Nova module (orbit, core, beacon, etc.)
-  message     String   // User's message
-  response    String   // AI response
-  actions     Json?    // Suggested actions
+  topic       String
+  participants String[]
+  messages    String   // JSON-encoded messages
+  userId      String
   timestamp   DateTime @default(now())
-  
+  module      String
+  message     String
+  response    String
+  actions     String[]
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @default(now())
+
   @@map("conversations")
 }
 
@@ -624,7 +632,7 @@ model ModuleConfig {
   config      Json     // Module-specific configuration
   isEnabled   Boolean  @default(true)
   createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
+  updatedAt   DateTime @default(now())
   
   @@map("module_configs")
 }

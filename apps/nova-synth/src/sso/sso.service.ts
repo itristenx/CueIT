@@ -26,10 +26,13 @@ export class SsoService {
       },
     });
 
-    const configMap = configs.reduce((acc, config) => {
-      acc[config.key] = config.value;
-      return acc;
-    }, {} as Record<string, string>);
+    const configMap = configs.reduce(
+      (acc, config) => {
+        acc[config.key] = config.value;
+        return acc;
+      },
+      {} as Record<string, string>,
+    );
 
     return {
       enabled: configMap.ssoEnabled === 'true',
@@ -54,7 +57,7 @@ export class SsoService {
   async updateSsoConfig(updates: any) {
     // Update SSO configuration in database
     const flatUpdates = this.flattenSsoConfig(updates);
-    
+
     for (const [key, value] of Object.entries(flatUpdates)) {
       await this.prisma.configuration.upsert({
         where: { key },
@@ -68,16 +71,25 @@ export class SsoService {
 
   async getSsoAvailability() {
     const config = await this.getSsoConfig();
-    
+
     if (!config.enabled) {
       return { available: false };
     }
 
-    if (config.provider === 'saml' && config.saml.entryPoint && config.saml.issuer && config.saml.callbackUrl) {
+    if (
+      config.provider === 'saml' &&
+      config.saml.entryPoint &&
+      config.saml.issuer &&
+      config.saml.callbackUrl
+    ) {
       return { available: true, loginUrl: '/auth/saml' };
     }
 
-    if (config.provider === 'oidc' && config.oidc.discoveryUrl && config.oidc.clientId) {
+    if (
+      config.provider === 'oidc' &&
+      config.oidc.discoveryUrl &&
+      config.oidc.clientId
+    ) {
       return { available: true, loginUrl: '/auth/oidc' };
     }
 
@@ -86,15 +98,15 @@ export class SsoService {
 
   private flattenSsoConfig(config: any): Record<string, string> {
     const flattened: Record<string, string> = {};
-    
+
     if (config.enabled !== undefined) {
       flattened.ssoEnabled = config.enabled ? 'true' : 'false';
     }
-    
+
     if (config.provider !== undefined) {
       flattened.ssoProvider = config.provider;
     }
-    
+
     if (config.saml) {
       if (config.saml.entryPoint !== undefined) {
         flattened.ssoSamlEntryPoint = config.saml.entryPoint;
@@ -109,7 +121,7 @@ export class SsoService {
         flattened.ssoSamlCert = config.saml.cert;
       }
     }
-    
+
     if (config.oidc) {
       if (config.oidc.discoveryUrl !== undefined) {
         flattened.ssoOidcDiscoveryUrl = config.oidc.discoveryUrl;
@@ -124,7 +136,7 @@ export class SsoService {
         flattened.ssoOidcScope = config.oidc.scope;
       }
     }
-    
+
     return flattened;
   }
 }

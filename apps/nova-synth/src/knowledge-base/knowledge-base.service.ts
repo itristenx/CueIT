@@ -8,12 +8,18 @@ import type { KBArticle } from '../../generated/prisma';
 export class KnowledgeBaseService {
   constructor(private readonly prisma: PrismaService) {}
 
-  async create(createKBArticleDto: CreateKBArticleDto, authorId: string): Promise<KBArticle> {
+  async create(
+    createKBArticleDto: CreateKBArticleDto,
+    authorId: string,
+  ): Promise<KBArticle> {
     return this.prisma.kBArticle.create({
       data: {
         ...createKBArticleDto,
         authorId,
-        publishedAt: createKBArticleDto.status === ArticleStatus.PUBLISHED ? new Date() : null,
+        publishedAt:
+          createKBArticleDto.status === ArticleStatus.PUBLISHED
+            ? new Date()
+            : null,
       },
       include: {
         author: true,
@@ -68,7 +74,10 @@ export class KnowledgeBaseService {
     return { articles, total, page, limit };
   }
 
-  async findOne(id: string, incrementView: boolean = true): Promise<KBArticle | null> {
+  async findOne(
+    id: string,
+    incrementView: boolean = true,
+  ): Promise<KBArticle | null> {
     if (incrementView) {
       await this.prisma.kBArticle.update({
         where: { id },
@@ -85,9 +94,12 @@ export class KnowledgeBaseService {
     });
   }
 
-  async update(id: string, updateKBArticleDto: UpdateKBArticleDto): Promise<KBArticle> {
+  async update(
+    id: string,
+    updateKBArticleDto: UpdateKBArticleDto,
+  ): Promise<KBArticle> {
     const data: any = { ...updateKBArticleDto };
-    
+
     if (updateKBArticleDto.status === ArticleStatus.PUBLISHED) {
       data.publishedAt = new Date();
     }
@@ -110,14 +122,16 @@ export class KnowledgeBaseService {
   async getCategories(): Promise<string[]> {
     const categories = await this.prisma.kBArticle.findMany({
       select: { category: true },
-      where: { 
+      where: {
         category: { not: null },
         status: ArticleStatus.PUBLISHED,
       },
       distinct: ['category'],
     });
 
-    return categories.map(c => c.category).filter((cat): cat is string => cat !== null);
+    return categories
+      .map((c) => c.category)
+      .filter((cat): cat is string => cat !== null);
   }
 
   async getTags(): Promise<string[]> {
@@ -126,14 +140,14 @@ export class KnowledgeBaseService {
       where: { status: ArticleStatus.PUBLISHED },
     });
 
-    const allTags = articles.flatMap(a => a.tags);
+    const allTags = articles.flatMap((a) => a.tags);
     return [...new Set(allTags)] as string[];
   }
 
   async markHelpful(id: string, helpful: boolean): Promise<KBArticle> {
     return this.prisma.kBArticle.update({
       where: { id },
-      data: helpful 
+      data: helpful
         ? { helpful: { increment: 1 } }
         : { notHelpful: { increment: 1 } },
     });

@@ -62,9 +62,9 @@ export class KioskService {
   async generateActivationCode(kioskId?: string) {
     const code = Math.random().toString(36).substring(2, 10).toUpperCase();
     const qrCode = `data:image/svg+xml;base64,${Buffer.from(`<svg xmlns="http://www.w3.org/2000/svg" width="200" height="200"><rect width="200" height="200" fill="white"/><text x="100" y="100" text-anchor="middle" font-size="16">${code}</text></svg>`).toString('base64')}`;
-    
+
     const expiresAt = new Date(Date.now() + 60 * 60 * 1000); // 1 hour from now
-    
+
     return await this.prisma.kioskActivation.create({
       data: {
         code,

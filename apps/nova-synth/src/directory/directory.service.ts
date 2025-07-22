@@ -25,10 +25,13 @@ export class DirectoryService {
       },
     });
 
-    const configMap = configs.reduce((acc, config) => {
-      acc[config.key] = config.value;
-      return acc;
-    }, {} as Record<string, string>);
+    const configMap = configs.reduce(
+      (acc, config) => {
+        acc[config.key] = config.value;
+        return acc;
+      },
+      {} as Record<string, string>,
+    );
 
     return {
       enabled: configMap.directoryEnabled === 'true',
@@ -60,7 +63,7 @@ export class DirectoryService {
   async testDirectoryConnection() {
     // Test directory connection based on configuration
     const config = await this.getDirectoryConfig();
-    
+
     if (!config.enabled) {
       return { success: false, message: 'Directory integration is disabled' };
     }

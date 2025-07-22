@@ -113,7 +113,7 @@ export class RolesService {
     }
 
     // Check if user already has this role
-    const existingRole = user.userGroups.find(ug => ug.id === roleId);
+    const existingRole = user.userGroups.find((ug) => ug.id === roleId);
     if (existingRole) {
       return { message: 'User already has this role' };
     }
@@ -148,13 +148,25 @@ export class RolesService {
   async getDefaultRoles() {
     return [
       { name: 'end_user', description: 'Submit/view own tickets, public KB' },
-      { name: 'manager', description: 'View team tickets, same rights as end_user' },
-      { name: 'technician', description: 'Assigned tickets, comments, SLA tools' },
-      { name: 'tech_lead', description: 'Full ticket access, assign, manage techs' },
+      {
+        name: 'manager',
+        description: 'View team tickets, same rights as end_user',
+      },
+      {
+        name: 'technician',
+        description: 'Assigned tickets, comments, SLA tools',
+      },
+      {
+        name: 'tech_lead',
+        description: 'Full ticket access, assign, manage techs',
+      },
       { name: 'admin', description: 'System-wide control' },
       { name: 'hr_admin', description: 'HR tickets only, KB controls' },
       { name: 'ops_admin', description: 'Ops/FAC tickets only' },
-      { name: 'reporting_analyst', description: 'Report-only dashboards scoped to dept' },
+      {
+        name: 'reporting_analyst',
+        description: 'Report-only dashboards scoped to dept',
+      },
       { name: 'auditor', description: 'Read-only logs and views' },
     ];
   }
@@ -190,48 +202,153 @@ export class RolesService {
       kiosks: { view: false, create: false, update: false, delete: false },
       reports: { view: false, create: false, update: false, delete: false },
       settings: { view: false, create: false, update: false, delete: false },
-      knowledgeBase: { view: false, create: false, update: false, delete: false },
+      knowledgeBase: {
+        view: false,
+        create: false,
+        update: false,
+        delete: false,
+      },
     };
 
     switch (roleName) {
       case 'admin':
-        Object.keys(permissions).forEach(key => {
-          permissions[key] = { view: true, create: true, update: true, delete: true };
+        Object.keys(permissions).forEach((key) => {
+          permissions[key] = {
+            view: true,
+            create: true,
+            update: true,
+            delete: true,
+          };
         });
         break;
       case 'tech_lead':
-        permissions.tickets = { view: true, create: true, update: true, delete: true };
-        permissions.users = { view: true, create: false, update: true, delete: false };
-        permissions.kiosks = { view: true, create: true, update: true, delete: false };
-        permissions.reports = { view: true, create: true, update: false, delete: false };
-        permissions.knowledgeBase = { view: true, create: true, update: true, delete: true };
+        permissions.tickets = {
+          view: true,
+          create: true,
+          update: true,
+          delete: true,
+        };
+        permissions.users = {
+          view: true,
+          create: false,
+          update: true,
+          delete: false,
+        };
+        permissions.kiosks = {
+          view: true,
+          create: true,
+          update: true,
+          delete: false,
+        };
+        permissions.reports = {
+          view: true,
+          create: true,
+          update: false,
+          delete: false,
+        };
+        permissions.knowledgeBase = {
+          view: true,
+          create: true,
+          update: true,
+          delete: true,
+        };
         break;
       case 'technician':
-        permissions.tickets = { view: true, create: true, update: true, delete: false };
-        permissions.knowledgeBase = { view: true, create: true, update: true, delete: false };
+        permissions.tickets = {
+          view: true,
+          create: true,
+          update: true,
+          delete: false,
+        };
+        permissions.knowledgeBase = {
+          view: true,
+          create: true,
+          update: true,
+          delete: false,
+        };
         break;
       case 'manager':
-        permissions.tickets = { view: true, create: true, update: true, delete: false };
-        permissions.users = { view: true, create: false, update: false, delete: false };
-        permissions.reports = { view: true, create: false, update: false, delete: false };
-        permissions.knowledgeBase = { view: true, create: false, update: false, delete: false };
+        permissions.tickets = {
+          view: true,
+          create: true,
+          update: true,
+          delete: false,
+        };
+        permissions.users = {
+          view: true,
+          create: false,
+          update: false,
+          delete: false,
+        };
+        permissions.reports = {
+          view: true,
+          create: false,
+          update: false,
+          delete: false,
+        };
+        permissions.knowledgeBase = {
+          view: true,
+          create: false,
+          update: false,
+          delete: false,
+        };
         break;
       case 'end_user':
-        permissions.tickets = { view: true, create: true, update: false, delete: false };
-        permissions.knowledgeBase = { view: true, create: false, update: false, delete: false };
+        permissions.tickets = {
+          view: true,
+          create: true,
+          update: false,
+          delete: false,
+        };
+        permissions.knowledgeBase = {
+          view: true,
+          create: false,
+          update: false,
+          delete: false,
+        };
         break;
       case 'reporting_analyst':
-        permissions.reports = { view: true, create: true, update: false, delete: false };
+        permissions.reports = {
+          view: true,
+          create: true,
+          update: false,
+          delete: false,
+        };
         break;
       case 'auditor':
-        permissions.tickets = { view: true, create: false, update: false, delete: false };
-        permissions.users = { view: true, create: false, update: false, delete: false };
-        permissions.reports = { view: true, create: false, update: false, delete: false };
+        permissions.tickets = {
+          view: true,
+          create: false,
+          update: false,
+          delete: false,
+        };
+        permissions.users = {
+          view: true,
+          create: false,
+          update: false,
+          delete: false,
+        };
+        permissions.reports = {
+          view: true,
+          create: false,
+          update: false,
+          delete: false,
+        };
         break;
       default:
         // Default to end_user permissions
-        permissions.tickets = { view: true, create: true, update: false, delete: false };
-        permissions.knowledgeBase = { view: true, create: false, update: false, delete: false };
+        permissions.tickets = {
+          view: true,
+          create: true,
+          update: false,
+          delete: false,
+        };
+        permissions.knowledgeBase = {
+          view: true,
+          create: false,
+          update: false,
+          delete: false,
+        };
         break;
     }
 

@@ -21,7 +21,6 @@ export interface NotificationData {
   priority?: 'low' | 'normal' | 'high';
 }
 
-
 @Injectable()
 export class NotificationService {
   private transporter: nodemailer.Transporter;
@@ -42,7 +41,6 @@ export class NotificationService {
     });
   }
 
-
   // Centralized notification rules
   private notificationRules = {
     'ticket.created': {
@@ -60,7 +58,12 @@ export class NotificationService {
     return this.notificationRules[type] || null;
   }
 
-  async sendTicketNotification(type: string, ticketId: string, userId: string, data: any = {}) {
+  async sendTicketNotification(
+    type: string,
+    ticketId: string,
+    userId: string,
+    data: any = {},
+  ) {
     // Centralized notification logic
     const rule = this.getNotificationRule(type);
     if (!rule) {
@@ -92,10 +95,13 @@ export class NotificationService {
     };
     // Send notifications via enabled channels
     if (rule.channels.includes('email')) {
-      await this.emailService.sendTicketNotification({
-        ...ticket,
-        createdAt: ticket.createdAt.toISOString(),
-      }, [user.email]);
+      await this.emailService.sendTicketNotification(
+        {
+          ...ticket,
+          createdAt: ticket.createdAt.toISOString(),
+        },
+        [user.email],
+      );
     }
     if (rule.channels.includes('realtime')) {
       // TODO: Implement real-time notification (WebSocket/SSE)
@@ -108,16 +114,25 @@ export class NotificationService {
   async sendEmailNotification(notificationData: NotificationData) {
     try {
       const template = await this.getEmailTemplate(notificationData.template);
-      
+
       if (!template) {
         throw new Error(`Template not found: ${notificationData.template}`);
       }
 
-      const htmlContent = this.replaceVariables(template.htmlContent, notificationData.variables);
-      const textContent = this.replaceVariables(template.textContent, notificationData.variables);
+      const htmlContent = this.replaceVariables(
+        template.htmlContent,
+        notificationData.variables,
+      );
+      const textContent = this.replaceVariables(
+        template.textContent,
+        notificationData.variables,
+      );
 
       const mailOptions = {
-        from: this.configService.get('SMTP_FROM', 'Nova Universe <noreply@nova-universe.com>'),
+        from: this.configService.get(
+          'SMTP_FROM',
+          'Nova Universe <noreply@nova-universe.com>',
+        ),
         to: notificationData.to,
         subject: notificationData.subject,
         html: htmlContent,
@@ -125,7 +140,10 @@ export class NotificationService {
       };
 
       const result = await this.transporter.sendMail(mailOptions);
-      console.log(`Email sent successfully to ${notificationData.to}:`, result.messageId);
+      console.log(
+        `Email sent successfully to ${notificationData.to}:`,
+        result.messageId,
+      );
 
       return result;
     } catch (error) {
@@ -134,9 +152,10 @@ export class NotificationService {
     }
   }
 
-
   // Persistent CRUD for EmailTemplate
-  async createEmailTemplate(templateData: Omit<EmailTemplate, 'id' | 'createdAt' | 'updatedAt'>) {
+  async createEmailTemplate(
+    templateData: Omit<EmailTemplate, 'id' | 'createdAt' | 'updatedAt'>,
+  ) {
     const template = await this.prisma.emailTemplate.create({
       data: {
         ...templateData,
@@ -173,16 +192,23 @@ export class NotificationService {
 
   async listEmailTemplates(): Promise<EmailTemplate[]> {
     const templates = await this.prisma.emailTemplate.findMany();
-    return templates.map(t => ({ ...t, variables: t.variables.split(',') }));
+    return templates.map((t) => ({ ...t, variables: t.variables.split(',') }));
   }
 
-  async updateEmailTemplate(id: string, data: Partial<Omit<EmailTemplate, 'id' | 'createdAt' | 'updatedAt'>>) {
+  async updateEmailTemplate(
+    id: string,
+    data: Partial<Omit<EmailTemplate, 'id' | 'createdAt' | 'updatedAt'>>,
+  ) {
     const template = await this.prisma.emailTemplate.update({
       where: { id },
       data: {
         ...data,
         ...(data.variables
-          ? { variables: Array.isArray(data.variables) ? data.variables.join(',') : String(data.variables) }
+          ? {
+              variables: Array.isArray(data.variables)
+                ? data.variables.join(',')
+                : String(data.variables),
+            }
           : {}),
       },
     });
@@ -196,37 +222,48 @@ export class NotificationService {
     return this.prisma.emailTemplate.delete({ where: { id } });
   }
 
-
   private getTemplateForNotificationType(type: string): string {
     const templateMap: Record<string, string> = {
-      'created': 'ticket-created',
-      'updated': 'ticket-updated',
-      'assigned': 'ticket-updated',
-      'resolved': 'ticket-resolved',
-      'closed': 'ticket-resolved',
+      created: 'ticket-created',
+      updated: 'ticket-updated',
+      assigned: 'ticket-updated',
+      resolved: 'ticket-resolved',
+      closed: 'ticket-resolved',
       'comment-added': 'ticket-updated',
     };
 
     return templateMap[type] || 'ticket-updated';
   }
 
-  private replaceVariables(content: string, variables: Record<string, any>): string {
+  private replaceVariables(
+    content: string,
+    variables: Record<string, any>,
+  ): string {
     let result = content;
-    
+
     for (const [key, value] of Object.entries(variables)) {
       const regex = new RegExp(`\\{\\{${key}\\}\\}`, 'g');
       result = result.replace(regex, String(value || ''));
     }
 
     // Handle conditional blocks (simple implementation)
-    result = result.replace(/\{\{#(\w+)\}\}(.*?)\{\{\/\1\}\}/gs, (match, variable, content) => {
-      return variables[variable] ? content : '';
-    });
+    result = result.replace(
+      /\{\{#(\w+)\}\}(.*?)\{\{\/\1\}\}/gs,
+      (match, variable, content) => {
+        return variables[variable] ? content : '';
+      },
+    );
 
     return result;
   }
 
-  private async logNotification(userId: string, ticketId: string, type: string, channel: string, recipient: string) {
+  private async logNotification(
+    userId: string,
+    ticketId: string,
+    type: string,
+    channel: string,
+    recipient: string,
+  ) {
     try {
       await this.prisma.notification.create({
         data: {

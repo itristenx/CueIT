@@ -12,7 +12,11 @@ import {
   Version,
 } from '@nestjs/common';
 import { RequestCatalogService } from './request-catalog.service';
-import { CreateRequestCatalogItemDto, UpdateRequestCatalogItemDto, CreateRequestDto } from './dto/request-catalog.dto';
+import {
+  CreateRequestCatalogItemDto,
+  UpdateRequestCatalogItemDto,
+  CreateRequestDto,
+} from './dto/request-catalog.dto';
 import { RequestCatalogCategory } from '../../generated/prisma';
 import { ClerkAuthGuard } from '../auth/clerk-auth.guard';
 
@@ -24,10 +28,16 @@ export class RequestCatalogController {
   // V2 Enhanced endpoints (default)
   @Post('items')
   @Version('2')
-  async createCatalogItem(@Body() createDto: CreateRequestCatalogItemDto, @Request() req) {
+  async createCatalogItem(
+    @Body() createDto: CreateRequestCatalogItemDto,
+    @Request() req,
+  ) {
     const user = req.user;
-    const item = await this.requestCatalogService.createCatalogItem(createDto, user.sub);
-    
+    const item = await this.requestCatalogService.createCatalogItem(
+      createDto,
+      user.sub,
+    );
+
     return {
       success: true,
       data: item,
@@ -42,8 +52,11 @@ export class RequestCatalogController {
     @Query('category') category?: RequestCatalogCategory,
     @Query('isActive') isActive?: boolean,
   ) {
-    const items = await this.requestCatalogService.findAllCatalogItems(category, isActive);
-    
+    const items = await this.requestCatalogService.findAllCatalogItems(
+      category,
+      isActive,
+    );
+
     return {
       success: true,
       data: items,
@@ -56,7 +69,7 @@ export class RequestCatalogController {
   @Version('2')
   async findCatalogItem(@Param('id') id: string) {
     const item = await this.requestCatalogService.findCatalogItemById(id);
-    
+
     return {
       success: true,
       data: item,
@@ -73,8 +86,12 @@ export class RequestCatalogController {
     @Request() req,
   ) {
     const user = req.user;
-    const item = await this.requestCatalogService.updateCatalogItem(id, updateDto, user.sub);
-    
+    const item = await this.requestCatalogService.updateCatalogItem(
+      id,
+      updateDto,
+      user.sub,
+    );
+
     return {
       success: true,
       data: item,
@@ -88,7 +105,7 @@ export class RequestCatalogController {
   async deleteCatalogItem(@Param('id') id: string, @Request() req) {
     const user = req.user;
     await this.requestCatalogService.deleteCatalogItem(id, user.sub);
-    
+
     return {
       success: true,
       message: 'Request catalog item deleted successfully',
@@ -101,8 +118,11 @@ export class RequestCatalogController {
   @Version('2')
   async createRequest(@Body() createDto: CreateRequestDto, @Request() req) {
     const user = req.user;
-    const request = await this.requestCatalogService.createRequest(createDto, user.sub);
-    
+    const request = await this.requestCatalogService.createRequest(
+      createDto,
+      user.sub,
+    );
+
     return {
       success: true,
       data: request,
@@ -124,7 +144,7 @@ export class RequestCatalogController {
       parseInt(page),
       parseInt(limit),
     );
-    
+
     return {
       success: true,
       data: result.requests,
@@ -142,7 +162,7 @@ export class RequestCatalogController {
   @Version('2')
   async getCatalogStats() {
     const stats = await this.requestCatalogService.getCatalogStats();
-    
+
     return {
       success: true,
       data: stats,
@@ -154,9 +174,15 @@ export class RequestCatalogController {
   // V1 Legacy endpoints (for backward compatibility)
   @Post('items')
   @Version('1')
-  async createCatalogItemV1(@Body() createDto: CreateRequestCatalogItemDto, @Request() req) {
+  async createCatalogItemV1(
+    @Body() createDto: CreateRequestCatalogItemDto,
+    @Request() req,
+  ) {
     const user = req.user;
-    const item = await this.requestCatalogService.createCatalogItem(createDto, user.sub);
+    const item = await this.requestCatalogService.createCatalogItem(
+      createDto,
+      user.sub,
+    );
     return item;
   }
 
@@ -183,7 +209,11 @@ export class RequestCatalogController {
     @Request() req,
   ) {
     const user = req.user;
-    return this.requestCatalogService.updateCatalogItem(id, updateDto, user.sub);
+    return this.requestCatalogService.updateCatalogItem(
+      id,
+      updateDto,
+      user.sub,
+    );
   }
 
   @Delete('items/:id')

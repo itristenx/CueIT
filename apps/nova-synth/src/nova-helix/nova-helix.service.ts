@@ -6,7 +6,7 @@ import { PrismaService } from '../prisma/prisma.service';
 export class NovaHelixService {
   constructor(
     private prisma: PrismaService,
-    private jwtService: JwtService
+    private jwtService: JwtService,
   ) {}
 
   async authenticateUser(email: string, password: string) {
@@ -23,7 +23,7 @@ export class NovaHelixService {
     // Note: The current schema doesn't have password field, this is a placeholder
     // In production, integrate with Clerk or implement proper password storage
     const isValid = await this.verifyPassword(password, 'dummy-hash');
-    
+
     if (!isValid) {
       throw new Error('Invalid credentials');
     }
@@ -32,20 +32,27 @@ export class NovaHelixService {
   }
 
   async generateTokens(user: any) {
-    const payload = { 
-      sub: user.id, 
-      email: user.email, 
+    const payload = {
+      sub: user.id,
+      email: user.email,
       role: user.role,
-      novaId: user.novaId 
+      novaId: user.novaId,
     };
 
     return {
-      access_token: await this.jwtService.signAsync(payload, { expiresIn: '15m' }),
-      refresh_token: await this.jwtService.signAsync(payload, { expiresIn: '7d' }),
+      access_token: await this.jwtService.signAsync(payload, {
+        expiresIn: '15m',
+      }),
+      refresh_token: await this.jwtService.signAsync(payload, {
+        expiresIn: '7d',
+      }),
     };
   }
 
-  private async verifyPassword(password: string, hashedPassword: string): Promise<boolean> {
+  private async verifyPassword(
+    password: string,
+    hashedPassword: string,
+  ): Promise<boolean> {
     // Implement proper password verification
     // This is a placeholder
     return password === hashedPassword;

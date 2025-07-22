@@ -1,4 +1,5 @@
 import axios from 'axios';
+import { getSession } from 'next-auth/react';
 
 const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001';
 
@@ -6,10 +7,10 @@ export const apiClient = axios.create({
   baseURL: API_BASE_URL,
 });
 
-// Attach Clerk JWT from localStorage to every request
+// Attach NextAuth JWT from session to every request
 apiClient.interceptors.request.use((config) => {
   if (typeof window !== 'undefined') {
-    const token = localStorage.getItem('clerk-token');
+    const token = localStorage.getItem('nextauth-token');
     if (token) {
       config.headers = config.headers || {};
       config.headers.Authorization = `Bearer ${token}`;
@@ -19,7 +20,11 @@ apiClient.interceptors.request.use((config) => {
 });
 
 export async function apiRequest(endpoint: string, options: Record<string, unknown> = {}) {
-  const token = typeof window !== 'undefined' ? localStorage.getItem('clerk-token') : null;
+  let token = null;
+  if (typeof window !== 'undefined') {
+    const session = await getSession();
+    token = (session as any)?.accessToken;
+  }
   const headers = {
     ...(options.headers || {}),
     ...(token ? { Authorization: `Bearer ${token}` } : {}),
